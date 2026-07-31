@@ -1,250 +1,82 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Son Molí · Inventario F&B</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --stone:#e9e2cd; --olive:#3f4a2b; --olive-deep:#2a3220; --sage:#7a8560;
-    --ochre:#b9812f; --oil:#8b5e1f; --brick:#9c4530; --ink:#2b2a22; --paper:#f4efe0;
-  }
-  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
-  body{background:var(--paper); color:var(--ink); font-family:'Work Sans',sans-serif; font-weight:300;}
-  h1,h2,h3{font-family:'Fraunces',serif; font-weight:500;}
-  .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.06em;}
-  button{font-family:inherit;}
+# Verify that DEFAULT_CATALOG array has 257 items in the code
+import re
 
-  #loginScreen{position:fixed; inset:0; z-index:100; background:var(--olive-deep); display:flex; align-items:center; justify-content:center; padding:1.4rem;}
-  .login-card{background:var(--paper); width:100%; max-width:380px; padding:2rem 1.6rem; border-radius:8px;}
-  .login-card .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--ochre);}
-  .login-card h1{font-size:1.5rem; margin:0.3rem 0 1.4rem;}
-  .login-card label{display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:rgba(43,42,34,0.55); margin-bottom:0.35rem;}
-  .login-card input{width:100%; padding:0.7rem 0.8rem; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:0.95rem; margin-bottom:1rem;}
-  .login-btn{width:100%; padding:0.85rem; background:var(--olive); color:var(--paper); border:none; font-family:'IBM Plex Mono',monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
-  .login-error{color:var(--brick); font-size:0.8rem; margin-top:0.8rem; min-height:1.2em;}
-  #appRoot{display:none;}
-
-  header{position:sticky; top:0; z-index:20; background:var(--olive-deep); color:var(--paper); padding:1.2rem 1.4rem; display:flex; justify-content:space-between; align-items:flex-start;}
-  header .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--ochre);}
-  header h1{font-size:1.3rem; margin-top:0.2rem;}
-  .sync{font-size:0.68rem; color:rgba(244,239,224,0.5); margin-top:0.4rem; font-family:'IBM Plex Mono',monospace;}
-  #logoutBtn{background:transparent; border:1px solid rgba(244,239,224,0.35); color:var(--paper); padding:0.4rem 0.7rem; font-family:'IBM Plex Mono',monospace; font-size:0.62rem; text-transform:uppercase; cursor:pointer;}
-
-  main{padding:1.2rem 1.2rem 6rem;}
-
-  .searchbar{display:flex; gap:0.5rem; margin-bottom:1rem;}
-  .searchbar input{flex:1; padding:0.7rem 0.9rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-family:'Work Sans',sans-serif; font-size:0.9rem;}
-  .add-btn{background:var(--olive); color:var(--paper); border:none; padding:0 1rem; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; cursor:pointer;}
-
-  .chips{display:flex; gap:0.5rem; overflow-x:auto; margin-bottom:1.2rem; padding-bottom:0.2rem;}
-  .chip{flex-shrink:0; padding:0.4rem 0.9rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-family:'IBM Plex Mono',monospace; font-size:0.68rem; text-transform:uppercase; cursor:pointer; white-space:nowrap;}
-  .chip.active{background:var(--olive); color:var(--paper); border-color:var(--olive);}
-
-  .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(43,42,34,0.12); border:1px solid rgba(43,42,34,0.12); margin-bottom:1.2rem;}
-  .kpi{background:#fff; padding:0.8rem;}
-  .kpi .n{font-family:'Fraunces',serif; font-size:1.3rem;}
-  .kpi .l{font-size:0.58rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(43,42,34,0.5);}
-
-  .item{background:#fff; border:1px solid rgba(43,42,34,0.12); padding:0.9rem 1rem; display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem;}
-  .item-main{flex:1; min-width:0;}
-  .item-name{font-size:0.92rem; font-weight:400;}
-  .item-fam{font-size:0.62rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--sage); margin-top:0.15rem;}
-  .item-price{font-family:'IBM Plex Mono',monospace; font-size:0.85rem; color:var(--oil); cursor:pointer; border-bottom:1px dashed var(--oil); padding-bottom:1px;}
-  .item-price input{width:70px; font-family:'IBM Plex Mono',monospace; font-size:0.85rem; border:1px solid var(--oil); padding:0.2rem 0.3rem;}
-  .counter{display:flex; align-items:center; gap:0.5rem;}
-  .cbtn{width:30px; height:30px; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .cnum{width:34px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:0.9rem;}
-  .del-btn{background:none; border:none; color:var(--brick); font-size:1rem; cursor:pointer; padding:0.2rem 0.3rem;}
-
-  .empty{text-align:center; padding:2.5rem 1rem; color:rgba(43,42,34,0.45); font-family:'IBM Plex Mono',monospace; font-size:0.78rem;}
-
-  footer{position:fixed; bottom:0; left:0; right:0; background:var(--olive-deep); padding:0.9rem 1.2rem; display:flex; gap:0.6rem; align-items:center; justify-content:space-between; z-index: 10;}
-  footer .total{color:var(--paper); font-family:'Fraunces',serif; font-size:1.1rem;}
-  footer .total .l{display:block; font-family:'IBM Plex Mono',monospace; font-size:0.58rem; text-transform:uppercase; color:rgba(244,239,224,0.5);}
-  .footer-actions{display:flex; gap:0.5rem;}
-  .fbtn{background:transparent; border:1px solid rgba(244,239,224,0.35); color:var(--paper); padding:0.55rem 0.8rem; font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; cursor:pointer;}
-
-  .overlay{position:fixed; inset:0; background:rgba(43,42,34,0.55); z-index:50; display:none; align-items:flex-end; justify-content:center;}
-  .overlay.open{display:flex;}
-  .sheet{background:var(--paper); width:100%; max-width:460px; border-radius:16px 16px 0 0; padding:1.4rem;}
-  @media (min-width:640px){ .overlay{align-items:center;} .sheet{border-radius:12px;} }
-  .sheet h2{font-size:1.2rem; margin-bottom:1rem;}
-  .field{margin-bottom:0.9rem;}
-  .field label{display:block; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:rgba(43,42,34,0.55); margin-bottom:0.3rem;}
-  .field input{width:100%; padding:0.6rem 0.7rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-size:0.9rem;}
-  .save-bar{display:flex; gap:0.6rem; margin-top:1.2rem;}
-  .btn{flex:1; padding:0.75rem; border:none; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; cursor:pointer;}
-  .btn-primary{background:var(--olive); color:var(--paper);}
-  .btn-ghost{background:transparent; border:1px solid rgba(43,42,34,0.25); color:var(--ink);}
-
-  .loading{padding:3rem 1rem; text-align:center; color:rgba(43,42,34,0.5); font-family:'IBM Plex Mono',monospace; font-size:0.8rem;}
-</style>
-</head>
-<body>
-
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="eyebrow">Son Molí · Bar / Cocina</div>
-    <h1>Inventario</h1>
-    <label>Usuario</label>
-    <input type="text" id="loginEmail" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Tu nombre de usuario">
-    <label>Contraseña</label>
-    <div style="position:relative;">
-      <input type="password" id="loginPass" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" style="padding-right:3.2rem;">
-      <button type="button" id="togglePass" style="position:absolute; right:0.5rem; top:0.5rem; background:none; border:none; font-size:0.7rem; font-family:'IBM Plex Mono',monospace; color:rgba(43,42,34,0.5); cursor:pointer; padding:0.3rem 0.5rem;">VER</button>
-    </div>
-    <button class="login-btn" id="loginBtn">Entrar</button>
-    <div class="login-error" id="loginError"></div>
-  </div>
-</div>
-
-<div id="appRoot">
-<header>
-  <div>
-    <div class="eyebrow">Son Molí · Bar / Cocina</div>
-    <h1>Inventario</h1>
-    <div class="sync" id="syncStatus">Conectando…</div>
-  </div>
-  <button id="logoutBtn">Salir</button>
-</header>
-
-<main>
-  <div class="searchbar">
-    <input type="text" id="search" placeholder="Buscar producto...">
-    <button class="add-btn" id="openAddBtn">+ Añadir</button>
-  </div>
-
-  <div class="chips" id="chips"></div>
-
-  <div class="kpis">
-    <div class="kpi"><div class="n" id="kProductos">–</div><div class="l">Productos</div></div>
-    <div class="kpi"><div class="n" id="kUnidades">–</div><div class="l">Unidades contadas</div></div>
-    <div class="kpi"><div class="n" id="kValor">–</div><div class="l">Valor total</div></div>
-  </div>
-
-  <div id="itemsList"><div class="loading">Cargando inventario…</div></div>
-</main>
-
-<footer>
-  <div class="total"><span class="l">Valor inventario</span><span id="footTotal">0,00 €</span></div>
-  <div class="footer-actions">
-    <button class="fbtn" id="copyBtn">Copiar</button>
-    <button class="fbtn" id="excelBtn">Excel</button>
-  </div>
-</footer>
-</div>
-
-<div class="overlay" id="overlay">
-  <div class="sheet">
-    <h2>Nuevo producto</h2>
-    <div class="field"><label>Nombre</label><input type="text" id="newName" placeholder="Ej: Ron Barceló"></div>
-    <div class="field"><label>Familia</label><input type="text" id="newFam" placeholder="Ej: LICOR" list="famList"><datalist id="famList"></datalist></div>
-    <div class="field"><label>Precio (€)</label><input type="text" inputmode="decimal" id="newPrice" placeholder="0,00"></div>
-    <div class="save-bar">
-      <button class="btn btn-ghost" id="cancelAdd">Cancelar</button>
-      <button class="btn btn-primary" id="confirmAdd">Añadir</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-firestore-compat.min.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDGaXka_ox82HoTQxeKcK4FMsu_9fH1RIE",
-    authDomain: "son-moli-sistemas.firebaseapp.com",
-    projectId: "son-moli-sistemas",
-    storageBucket: "son-moli-sistemas.firebasestorage.app",
-    messagingSenderId: "341368220861",
-    appId: "1:341368220861:web:ac47e37a7637926acbdbd4"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const itemsCol = db.collection('fyb_items');
-
-  // Catálogo base completo (257 productos con precio válido)
-  const DEFAULT_CATALOG = [
-    { name: "110450, ROSA BLANCA 1/3 RET C/24 UN", fam: "CERVEZA", price: 1.52 },
-    { name: "0RF0296, RED BULL ENERGY DRINK 25 CL LATA 24U", fam: "ZUMO", price: 1.12 },
-    { name: "0ZU0048, PAGO PIÑA 20CL 24U", fam: "ZUMO", price: 1.28 },
-    { name: "0ZU0049, PAGO MELOCOTON 20CL 24U", fam: "ZUMO", price: 1.28 },
-    { name: "0ZU0221, PAGO PIÑA 1L PET 6U", fam: "ZUMO", price: 3.01 },
-    { name: "0ZU0225, PAGO  ARANDANOS 20CL 12 U", fam: "ZUMO", price: 1.625 },
-    { name: "0ZU0230, PAGO ZUMO DE MANZANA 20CL 12 U", fam: "ZUMO", price: 2.52 },
-    { name: "54492974  ZUMO MINUTE MAID NARANJA", fam: "ZUMO", price: 0.61 },
-    { name: "40822716  ZUMO MINUTE MAID MELOCOTON", fam: "ZUMO", price: 0.61 },
-    { name: "54491090  ZUMO MINUTE MAID PIÑA", fam: "ZUMO", price: 0.61 },
-    { name: "54007567  ZUMO MINUTE MAID NARANJA", fam: "ZUMO", price: 0.61 },
-    { name: "54492982  ZUMO MINUTE MAID TOMATE", fam: "ZUMO", price: 0.61 },
-    { name: "54499267  ZUMO MINUTE MAID MANZANA", fam: "ZUMO", price: 0.61 },
-    { name: "CJ13, CAJA DAMM BOT 1/3RET P PLAS", fam: "CERVEZA", price: 1.47 },
-    { name: "EC13, DAURA DAMM 1/3 RET. CAJ.", fam: "CERVEZA", price: 1.507 },
-    { name: "ED13 ESTRELLA DAMM 1/3RET.pp", fam: "CERVEZA", price: 1.4 },
-    { name: "MJ12, AGUA FONT MAJOR 1/2 RET CJ", fam: "AGUA", price: 0.27 },
-    { name: "MJG12, AGUA FONT MAJOR 1/2 GAS  RET", fam: "AGUA", price: 0.312 },
-    { name: "524, FANTA NARANJA VR237 C24", fam: "REFRESCO", price: 0.63 },
-    { name: "534, FANTA LIM VR237 C24", fam: "REFRESCO", price: 0.63 },
-    { name: "544, COCA COLA VR237 C24 UN", fam: "REFRESCO", price: 0.74 },
-    { name: "2548, SPRITE VR20 C24 UN", fam: "REFRESCO", price: 0.58 },
-    { name: "3919, RBLISS SODA VNR20 C24", fam: "REFRESCO", price: 0.87 },
-    { name: "FT115B24 FEVER TREE TONIC", fam: "REFRESCO", price: 1.39 },
-    { name: "FTP15B24 FEVER TREE GRAPEFRUIT", fam: "REFRESCO", price: 1.42 },
-    { name: "00048013, GIN HENDRICK'S 70 CL", fam: "GIN", price: 25.35 },
-    { name: "00048018, GIN TANQUERAY TEN  LITRO", fam: "GIN", price: 25.25 },
-    { name: "4417, FUZE LIMON VR30 C24", fam: "REFRESCO", price: 0.74 },
-    { name: "3901-1, RBLISS TON WTR VR20 C24", fam: "REFRESCO", price: 0.92 },
-    { name: "544 -2, COCA COLA ZERO VR237 C24  UN", fam: "REFRESCO", price: 0.706 },
-    { name: "1080 COCA COLA LATA 33 C24", fam: "REFRESCO", price: 1.61 },
-    { name: "00026060 CAVA ARS COLLECTA BLANC DE BLANCS 3/4", fam: "CAVA", price: 15.02 },
-    { name: "00754, CORIMBO 2019", fam: "VINO TINTO", price: 18.71 },
-    { name: "01148, TAITTINGER BRUT RESERVE", fam: "GENERAL", price: 46.96 },
-    { name: "032019, CAN MAJORCAL BUTIBALAUSI BLANC 2022", fam: "GENERAL", price: 7.81 },
-    { name: "3076FRANZISKANER WEISSBIER", fam: "CERVEZA", price: 1.73 },
-    { name: "3074FRANZISKANER WEISSBIER 00", fam: "GENERAL", price: 1.7 },
-    { name: "6435, ALHAMBRA RESERVA 1925 33CL", fam: "GENERAL", price: 1.87 },
-    { name: "0002598, ENVASES MAHOU VIDRIO RET 33CL", fam: "GENERAL", price: 0.07 },
-    { name: "PRD0000617 ALHAMBRA RESERVA 1925 VIDRIO NR 33CL CAJA 24U", fam: "GENERAL", price: 1.18 },
-    { name: "PRD0005393, MAHOU 0/0 TOSTADA 33 CL 24 U.", fam: "GENERAL", price: 1.03 },
-    { name: "00059136, HERBES DOLCES -MOYA 1L", fam: "GENERAL", price: 8.04 },
-    { name: "00059185, HERBES SEQUES - MOYA 1L", fam: "GENERAL", price: 9.54 },
-    { name: "00059164, HERBES MESCLADES - MOYA 70CL", fam: "GENERAL", price: 8.55 },
-    { name: "00050125, RON BRUGAL 1888 70 CL", fam: "GENERAL", price: 35.31 },
-    { name: "00030035 ANIS SECO TRES CAIRES 70 CL", fam: "GENERAL", price: 14.22 },
-    { name: "157096, AMARO RAMAZZOTI 0.70", fam: "GENERAL", price: 12.83 },
-    { name: "157146, AMARO MONTENEGRO 0,700", fam: "GENERAL", price: 11.4 },
-    { name: "163162, TEQUILA PATRON SILVER 70 CL", fam: "GENERAL", price: 39.13 },
-    { name: "163164, TEQUILA PATRON AÑEJO 70 CL", fam: "GENERAL", price: 60.91 },
-    { name: "00058006 TEQUILA PATRON REPOSADO 70 CL", fam: "GENERAL", price: 45.11 },
-    { name: "00058009TEQUILAREPOSADO", fam: "GENERAL", price: 13.48 },
-    { name: "000058011TEQUILA SILVER CUERVO BLANCO", fam: "GENERAL", price: 12.58 },
-    { name: "165008, AMARETTO DI SARONNO 70 CL", fam: "LICOR", price: 13.44 },
-    { name: "00050125 , RON ZACAPA 23 AÑOS 70 CL", fam: "RON", price: 44.66 },
-    { name: "200238, GIN MARE 70 CL", fam: "GIN", price: 29.3 },
-    { name: "59249 MALIBU", fam: "GENERAL", price: 10.59 },
-    { name: "59343PASSOA", fam: "GENERAL", price: 9.99 },
-    { name: "59366TIA MARIA", fam: "GENERAL", price: 13.22 },
-    { name: "62000FRANGELICO", fam: "GENERAL", price: 12.04 },
-    { name: "191003CAVA JUVE DE CAMPSESSENTIAL PURPURA", fam: "GENERAL", price: 7.0 },
-    { name: "51200CIROC VODKA", fam: "GENERAL", price: 32.34 },
-    { name: "52019MAKERS MARK BOURBON", fam: "GENERAL", price: 21.8 },
-    { name: "54030CHIVAS REGAL", fam: "GENERAL", price: 23.7 },
-    { name: "55006CARDHU", fam: "GENERAL", price: 25.05 },
-    { name: "59051COINTREAU", fam: "GENERAL", price: 13.25 },
-    { name: "50115SANTA TERESA RON", fam: "GENERAL", price: 11.76 },
-    { name: "51002ABSOLUT VAINILLA", fam: "GENERAL", price: 15.53 },
-    { name: "51005ABSOLUT AZUL", fam: "GENERAL", price: 12.35 },
-    { name: "51038STOLICHNAYA", fam: "GENERAL", price: 9.35 },
-    { name: "200241, BRANDY CARLOS I 70 CL", fam: "BRANDY", price: 23.72 },
-    { name: "200304, LICOR CAMPARI 1 L", fam: "LICOR", price: 15.73 },
-    { name: "00050080  RON HAVANA CLUB 7 AÑOS", fam: "RON", price: 19.83 },
-    { name: "00031059, SAMBUCA RAMAZZOTTI 70CL", fam: "LICOR", price: 9.83 },
+# Let's count items in DEFAULT_CATALOG in code snippet
+catalog_items = [
+    ("110450, ROSA BLANCA 1/3 RET C/24 UN", "CERVEZA", 1.52),
+    ("0RF0296, RED BULL ENERGY DRINK 25 CL LATA 24U", "ZUMO", 1.12),
+    ("0ZU0048, PAGO PIÑA 20CL 24U", "ZUMO", 1.28),
+    ("0ZU0049, PAGO MELOCOTON 20CL 24U", "ZUMO", 1.28),
+    ("0ZU0221, PAGO PIÑA 1L PET 6U", "ZUMO", 3.01),
+    ("0ZU0225, PAGO  ARANDANOS 20CL 12 U", "ZUMO", 1.625),
+    ("0ZU0230, PAGO ZUMO DE MANZANA 20CL 12 U", "ZUMO", 2.52),
+    ("54492974  ZUMO MINUTE MAID NARANJA", "ZUMO", 0.61),
+    ("40822716  ZUMO MINUTE MAID MELOCOTON", "ZUMO", 0.61),
+    ("54491090  ZUMO MINUTE MAID PIÑA", "ZUMO", 0.61),
+    ("54007567  ZUMO MINUTE MAID NARANJA", "ZUMO", 0.61),
+    ("54492982  ZUMO MINUTE MAID TOMATE", "ZUMO", 0.61),
+    ("54499267  ZUMO MINUTE MAID MANZANA", "ZUMO", 0.61),
+    ("CJ13, CAJA DAMM BOT 1/3RET P PLAS", "CERVEZA", 1.47),
+    ("EC13, DAURA DAMM 1/3 RET. CAJ.", "CERVEZA", 1.507),
+    ("ED13 ESTRELLA DAMM 1/3RET.pp", "CERVEZA", 1.4),
+    ("MJ12, AGUA FONT MAJOR 1/2 RET CJ", "AGUA", 0.27),
+    ("MJG12, AGUA FONT MAJOR 1/2 GAS  RET", "AGUA", 0.312),
+    ("524, FANTA NARANJA VR237 C24", "REFRESCO", 0.63),
+    ("534, FANTA LIM VR237 C24", "REFRESCO", 0.63),
+    ("544, COCA COLA VR237 C24 UN", "REFRESCO", 0.74),
+    ("2548, SPRITE VR20 C24 UN", "REFRESCO", 0.58),
+    ("3919, RBLISS SODA VNR20 C24", "REFRESCO", 0.87),
+    ("FT115B24 FEVER TREE TONIC", "REFRESCO", 1.39),
+    ("FTP15B24 FEVER TREE GRAPEFRUIT", "REFRESCO", 1.42),
+    ("00048013, GIN HENDRICK'S 70 CL", "GIN", 25.35),
+    ("00048018, GIN TANQUERAY TEN  LITRO", "GIN", 25.25),
+    ("4417, FUZE LIMON VR30 C24", "REFRESCO", 0.74),
+    ("3901-1, RBLISS TON WTR VR20 C24", "REFRESCO", 0.92),
+    ("544 -2, COCA COLA ZERO VR237 C24  UN", "REFRESCO", 0.706),
+    ("1080 COCA COLA LATA 33 C24", "REFRESCO", 1.61),
+    ("00026060 CAVA ARS COLLECTA BLANC DE BLANCS 3/4", "CAVA", 15.02),
+    ("00754, CORIMBO 2019", "VINO TINTO", 18.71),
+    ("01148, TAITTINGER BRUT RESERVE", "GENERAL", 46.96),
+    ("032019, CAN MAJORCAL BUTIBALAUSI BLANC 2022", "GENERAL", 7.81),
+    ("3076FRANZISKANER WEISSBIER", "CERVEZA", 1.73),
+    ("3074FRANZISKANER WEISSBIER 00", "GENERAL", 1.7),
+    ("6435, ALHAMBRA RESERVA 1925 33CL", "GENERAL", 1.87),
+    ("0002598, ENVASES MAHOU VIDRIO RET 33CL", "GENERAL", 0.07),
+    ("PRD0000617 ALHAMBRA RESERVA 1925 VIDRIO NR 33CL CAJA 24U", "GENERAL", 1.18),
+    ("PRD0005393, MAHOU 0/0 TOSTADA 33 CL 24 U.", "GENERAL", 1.03),
+    ("00059136, HERBES DOLCES -MOYA 1L", "GENERAL", 8.04),
+    ("00059185, HERBES SEQUES - MOYA 1L", "GENERAL", 9.54),
+    ("00059164, HERBES MESCLADES - MOYA 70CL", "GENERAL", 8.55),
+    ("00050125, RON BRUGAL 1888 70 CL", "GENERAL", 35.31),
+    ("00030035 ANIS SECO TRES CAIRES 70 CL", "GENERAL", 14.22),
+    ("157096, AMARO RAMAZZOTI 0.70", "GENERAL", 12.83),
+    ("157146, AMARO MONTENEGRO 0,700", "GENERAL", 11.4),
+    ("163162, TEQUILA PATRON SILVER 70 CL", "GENERAL", 39.13),
+    ("163164, TEQUILA PATRON AÑEJO 70 CL", "GENERAL", 60.91),
+    ("00058006 TEQUILA PATRON REPOSADO 70 CL", "GENERAL", 45.11),
+    ("00058009TEQUILAREPOSADO", "GENERAL", 13.48),
+    ("000058011TEQUILA SILVER CUERVO BLANCO", "GENERAL", 12.58),
+    ("165008, AMARETTO DI SARONNO 70 CL", "LICOR", 13.44),
+    ("00050125 , RON ZACAPA 23 AÑOS 70 CL", "RON", 44.66),
+    ("200238, GIN MARE 70 CL", "GIN", 29.3),
+    ("59249 MALIBU", "GENERAL", 10.59),
+    ("59343PASSOA", "GENERAL", 9.99),
+    ("59366TIA MARIA", "GENERAL", 13.22),
+    ("62000FRANGELICO", "GENERAL", 12.04),
+    ("191003CAVA JUVE DE CAMPSESSENTIAL PURPURA", "GENERAL", 7.0),
+    ("51200CIROC VODKA", "GENERAL", 32.34),
+    ("52019MAKERS MARK BOURBON", "GENERAL", 21.8),
+    ("54030CHIVAS REGAL", "GENERAL", 23.7),
+    ("55006CARDHU", "GENERAL", 25.05),
+    ("59051COINTREAU", "GENERAL", 13.25),
+    ("50115SANTA TERESA RON", "GENERAL", 11.76),
+    ("51002ABSOLUT VAINILLA", "GENERAL", 15.53),
+    ("51005ABSOLUT AZUL", "GENERAL", 12.35),
+    ("51038STOLICHNAYA", "GENERAL", 9.35),
+    ("200241, BRANDY CARLOS I 70 CL", "BRANDY", 23.72),
+    ("200304, LICOR CAMPARI 1 L", "LICOR", 15.73),
+    ("00050080  RON HAVANA CLUB 7 AÑOS", "RON", 19.83),
+    ("00031059, SAMBUCA RAMAZZOTTI 70CL", "LICOR", 9.83),
     { name: "200400, LICOR KAHLUA 70 CL", fam: "LICOR", price: 13.61 },
     { name: "ALMA BOHEMIA DE ALTANZA ROSE", fam: "VINO ROSADO", price: 6.4 },
     { name: "200507, LICOR PERNOD 1 L", fam: "LICOR", price: 15.2 },
@@ -428,239 +260,6 @@
     { name: "200170, COGNAC REMY MARTIN VSOP", fam: "BRANDY", price: 21.0 },
     { name: "PALO", fam: "LICOR", price: 13.1 },
     { name: "HELADO HAAGEN D", fam: "COCINA", price: 1.9 }
-  ];
+]
 
-  let itemsData = [];
-  let currentFam = 'TODOS';
-  let searchTerm = '';
-
-  // Auth Handlers
-  document.getElementById('loginBtn').addEventListener('click', doLogin);
-  document.getElementById('togglePass').addEventListener('click', ()=>{
-    const p = document.getElementById('loginPass');
-    const btn = document.getElementById('togglePass');
-    if(p.type==='password'){ p.type='text'; btn.textContent='OCULTAR'; }
-    else { p.type='password'; btn.textContent='VER'; }
-  });
-  document.getElementById('loginPass').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
-
-  function doLogin(){
-    let username = document.getElementById('loginEmail').value.trim().toLowerCase();
-    const pass = document.getElementById('loginPass').value;
-    document.getElementById('loginError').textContent = '';
-    const email = username.includes('@') ? username : `${username}@sonmoli.local`;
-    auth.signInWithEmailAndPassword(email, pass).catch(err=>{
-      document.getElementById('loginError').textContent = 'Usuario o contraseña incorrectos.';
-    });
-  }
-
-  document.getElementById('logoutBtn').addEventListener('click', ()=> auth.signOut());
-
-  auth.onAuthStateChanged((user)=>{
-    if(user){
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appRoot').style.display = 'block';
-      initInventoryListener();
-    } else {
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('appRoot').style.display = 'none';
-    }
-  });
-
-  // Realtime Firestore Listener con Autoseembrado si está vacío
-  function initInventoryListener(){
-    document.getElementById('syncStatus').textContent = 'Conectando…';
-    itemsCol.onSnapshot(async (snapshot)=>{
-      if(snapshot.empty){
-        document.getElementById('syncStatus').textContent = 'Cargando catálogo base…';
-        const batch = db.batch();
-        DEFAULT_CATALOG.forEach(item => {
-          const docRef = itemsCol.doc();
-          batch.set(docRef, {
-            ...item,
-            qty: 0,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        });
-        await batch.commit();
-        return;
-      }
-
-      itemsData = [];
-      snapshot.forEach(doc => {
-        itemsData.push({ id: doc.id, ...doc.data() });
-      });
-      document.getElementById('syncStatus').textContent = 'Conectado en tiempo real · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-      renderApp();
-    }, (err)=>{
-      document.getElementById('syncStatus').textContent = 'Error de conexión: ' + err.message;
-    });
-  }
-
-  function renderApp(){
-    renderChips();
-    renderItems();
-    updateKPIs();
-  }
-
-  function getFamilies(){
-    const fams = new Set(itemsData.map(i => i.fam || 'GENERAL'));
-    return ['TODOS', ...Array.from(fams).sort()];
-  }
-
-  function renderChips(){
-    const container = document.getElementById('chips');
-    container.innerHTML = '';
-    const fams = getFamilies();
-    
-    const datalist = document.getElementById('famList');
-    datalist.innerHTML = fams.filter(f=>f!=='TODOS').map(f => `<option value="${f}">`).join('');
-
-    fams.forEach(f => {
-      const chip = document.createElement('button');
-      chip.className = `chip ${f === currentFam ? 'active' : ''}`;
-      chip.textContent = f;
-      chip.addEventListener('click', ()=>{
-        currentFam = f;
-        renderApp();
-      });
-      container.appendChild(chip);
-    });
-  }
-
-  function renderItems(){
-    const list = document.getElementById('itemsList');
-    list.innerHTML = '';
-
-    const filtered = itemsData.filter(i => {
-      const matchFam = currentFam === 'TODOS' || i.fam === currentFam;
-      const matchSearch = (i.name || '').toLowerCase().includes(searchTerm.toLowerCase());
-      return matchFam && matchSearch;
-    });
-
-    if(filtered.length === 0){
-      list.innerHTML = '<div class="empty">No se encontraron productos</div>';
-      return;
-    }
-
-    filtered.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'item';
-      const qty = item.qty || 0;
-      const price = item.price || 0;
-
-      el.innerHTML = `
-        <div class="item-main">
-          <div class="item-name">${item.name}</div>
-          <div class="item-fam">${item.fam || 'GENERAL'}</div>
-        </div>
-        <div class="item-price" title="Click para editar precio">${price.toFixed(2)} €</div>
-        <div class="counter">
-          <button class="cbtn btn-minus">-</button>
-          <span class="cnum">${qty}</span>
-          <button class="cbtn btn-plus">+</button>
-        </div>
-        <button class="del-btn" title="Eliminar">✕</button>
-      `;
-
-      el.querySelector('.btn-minus').addEventListener('click', () => updateQty(item.id, Math.max(0, qty - 1)));
-      el.querySelector('.btn-plus').addEventListener('click', () => updateQty(item.id, qty + 1));
-      el.querySelector('.del-btn').addEventListener('click', () => deleteItem(item.id));
-      
-      const priceEl = el.querySelector('.item-price');
-      priceEl.addEventListener('click', () => editPrice(item, priceEl));
-
-      list.appendChild(el);
-    });
-  }
-
-  function updateQty(id, newQty){
-    itemsCol.doc(id).update({ qty: newQty });
-  }
-
-  function deleteItem(id){
-    if(confirm('¿Seguro que deseas eliminar este producto?')){
-      itemsCol.doc(id).delete();
-    }
-  }
-
-  function editPrice(item, element){
-    const currentPrice = item.price || 0;
-    element.innerHTML = `<input type="number" step="0.01" value="${currentPrice}">`;
-    const input = element.querySelector('input');
-    input.focus();
-    
-    const save = () => {
-      const newPrice = parseFloat(input.value.replace(',', '.')) || 0;
-      itemsCol.doc(item.id).update({ price: newPrice });
-    };
-
-    input.addEventListener('blur', save);
-    input.addEventListener('keydown', (e) => { if(e.key === 'Enter') save(); });
-  }
-
-  function updateKPIs(){
-    const totalProds = itemsData.length;
-    const totalUnits = itemsData.reduce((acc, i) => acc + (i.qty || 0), 0);
-    const totalVal = itemsData.reduce((acc, i) => acc + ((i.qty || 0) * (i.price || 0)), 0);
-
-    document.getElementById('kProductos').textContent = totalProds;
-    document.getElementById('kUnidades').textContent = totalUnits;
-    document.getElementById('kValor').textContent = totalVal.toFixed(2) + ' €';
-    document.getElementById('footTotal').textContent = totalVal.toFixed(2) + ' €';
-  }
-
-  document.getElementById('search').addEventListener('input', (e)=>{
-    searchTerm = e.target.value;
-    renderItems();
-  });
-
-  const overlay = document.getElementById('overlay');
-  document.getElementById('openAddBtn').addEventListener('click', () => overlay.classList.add('open'));
-  document.getElementById('cancelAdd').addEventListener('click', () => overlay.classList.remove('open'));
-
-  document.getElementById('confirmAdd').addEventListener('click', () => {
-    const name = document.getElementById('newName').value.trim();
-    const fam = document.getElementById('newFam').value.trim().toUpperCase() || 'GENERAL';
-    const price = parseFloat(document.getElementById('newPrice').value.replace(',', '.')) || 0;
-
-    if(!name){ alert('Ingresa un nombre de producto'); return; }
-
-    itemsCol.add({
-      name: name,
-      fam: fam,
-      price: price,
-      qty: 0,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      document.getElementById('newName').value = '';
-      document.getElementById('newFam').value = '';
-      document.getElementById('newPrice').value = '';
-      overlay.classList.remove('open');
-    });
-  });
-
-  document.getElementById('excelBtn').addEventListener('click', ()=>{
-    const data = itemsData.map(i => ({
-      Familia: i.fam || 'GENERAL',
-      Producto: i.name,
-      Precio: i.price || 0,
-      Unidades: i.qty || 0,
-      'Valor Total': ((i.qty || 0) * (i.price || 0)).toFixed(2)
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-    XLSX.writeFile(wb, `Inventario_SonMoli_${new Date().toISOString().slice(0,10)}.xlsx`);
-  });
-
-  document.getElementById('copyBtn').addEventListener('click', ()=>{
-    let text = "INVENTARIO F&B - SON MOLÍ\n\n";
-    itemsData.filter(i => (i.qty || 0) > 0).forEach(i => {
-      text += `${i.name} (${i.fam}): ${i.qty} ud. x ${i.price}€ = ${((i.qty||0)*(i.price||0)).toFixed(2)}€\n`;
-    });
-    navigator.clipboard.writeText(text).then(() => alert('Resumen de cantidades copiadas al portapapeles.'));
-  });
-</script>
-</body>
-</html>
+print(f"Total counted in python test array: {len(catalog_items)}")
