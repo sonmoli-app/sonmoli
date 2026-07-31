@@ -2,40 +2,30 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firestore.googleapis.com 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://*.googleapis.com;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Conteo Rápido — Son Molí</title>
+<title>Inventario — Son Molí</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root{
+  :root {
     --bg: #121319;
     --bg-2: #191B22;
     --surface: #1E212A;
     --surface-2: #272B36;
     --line-soft: #333844;
     --amber: #E8AC4C;
-    --amber-soft: #E8AC4C33;
-    --amber-dim: #7A5C2C;
+    --amber-soft: #E8AC4C22;
+    --green: #63B084;
+    --green-soft: #63B08422;
     --wine: #B8536E;
-    --wine-soft: #B8536E22;
     --text: #F3F0E9;
     --muted: #8C90A0;
-    --muted-dim: #5C6070;
-    --green: #63B084;
-    --mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --serif: Georgia, serif;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--sans); height:100%;}
   body{display:flex; flex-direction:column; height:100vh; overflow:hidden;}
-
-  .glow-layer{
-    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.55;
-    background:
-      radial-gradient(480px 220px at 12% -8%, var(--amber-soft), transparent 60%),
-      radial-gradient(420px 200px at 92% -6%, var(--wine-soft), transparent 60%);
-  }
 
   header{
     position:relative; z-index:2;
@@ -45,14 +35,7 @@
     flex-shrink:0;
   }
   .titlerow{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; }
-  .title{
-    font-family: var(--serif);
-    font-size: 21px;
-    letter-spacing: 0.01em;
-    color: var(--text);
-    margin: 0;
-    line-height:1.1;
-  }
+  .title{ font-family: var(--serif); font-size: 21px; color: var(--text); margin: 0; line-height:1.1; }
   .title .accent{ color: var(--amber); font-style:italic; }
   .eyebrow{
     font-family: var(--mono); font-size: 10px; color: var(--amber);
@@ -60,700 +43,251 @@
     display:flex; align-items:center; gap:6px;
   }
   .eyebrow::before{ content:""; width:14px; height:1px; background: var(--amber); display:inline-block; }
-  .datebadge{
-    font-family: var(--mono); font-size: 10.5px; color: var(--muted);
-    text-align:right; white-space:nowrap; padding-bottom:2px;
-  }
-
-  .rule{
-    height:2px; margin-top:12px; border-radius:2px;
-    background: linear-gradient(90deg, var(--amber) 0%, var(--wine) 55%, transparent 100%);
-    opacity:0.85;
-  }
+  .datebadge{ font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align:right; }
 
   .searchwrap{ position:relative; margin-top:12px; }
   #search{
-    width:100%;
-    padding: 12px 14px 12px 38px;
-    border-radius: 11px;
-    border: 1px solid var(--line-soft);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 16px;
-    font-family: var(--sans);
-    outline:none;
-    transition: border-color .15s ease, box-shadow .15s ease;
+    width:100%; padding: 10px 14px 10px 36px; border-radius: 10px;
+    border: 1px solid var(--line-soft); background: var(--surface);
+    color: var(--text); font-size: 15px; outline:none;
   }
-  #search:focus{ border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
-  .searchwrap svg{
-    position:absolute; left:12px; top:50%; transform:translateY(-50%);
-    width:16px; height:16px; stroke: var(--muted); pointer-events:none;
-  }
-  #clearSearch{
-    position:absolute; right:8px; top:50%; transform:translateY(-50%);
-    background:none; border:none; color:var(--muted); font-size:16px; padding:6px; display:none; cursor:pointer;
-  }
+  #search:focus{ border-color: var(--amber); }
+  .searchwrap svg{ position:absolute; left:12px; top:50%; transform:translateY(-50%); width:15px; height:15px; stroke: var(--muted); }
 
-  .chips{
-    display:flex; gap:7px; overflow-x:auto; margin-top:11px; padding-bottom:2px;
-    -ms-overflow-style: none; scrollbar-width: none;
+  .tabs{ display:flex; gap:6px; margin-top:12px; overflow-x:auto; padding-bottom:2px; }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:1; text-align:center; padding: 8px 12px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--line-soft);
+    color: var(--muted); font-size: 12px; font-weight:600; cursor:pointer;
+    white-space:nowrap; transition: all .15s ease;
   }
-  .chips::-webkit-scrollbar{display:none;}
-  .chip{
-    flex-shrink:0; display:flex; align-items:center; gap:6px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing:0.05em;
-    text-transform: uppercase;
-    padding: 7px 12px;
-    border-radius: 999px;
-    background: var(--surface);
-    border: 1px solid var(--line-soft);
-    color: var(--muted);
-    cursor:pointer;
-    white-space:nowrap;
-    transition: all .15s ease;
-  }
-  .chip svg{ width:13px; height:13px; opacity:0.85; }
-  .chip.active{ background: var(--amber); border-color: var(--amber); color: #201404; font-weight:700; }
-  .chip.active svg{ opacity:1; }
+  .tab.active{ background: var(--amber); border-color: var(--amber); color: #121319; font-weight:700; }
 
-  main{ position:relative; z-index:1; flex:1; overflow-y:auto; padding: 6px 12px 108px; -webkit-overflow-scrolling: touch; }
+  main{ position:relative; z-index:1; flex:1; overflow-y:auto; padding: 12px 14px 108px; -webkit-overflow-scrolling: touch; }
 
-  .fam-header{
-    position:sticky; top:0;
-    background: var(--bg);
-    padding: 16px 4px 7px;
-    display:flex; align-items:center; gap:8px;
-    z-index: 5;
+  .card-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+  .card{
+    background: var(--surface); border: 1px solid var(--line-soft);
+    border-radius: 12px; padding: 12px; display:flex; flex-direction:column;
+    justify-content:space-between; position:relative;
   }
-  .fam-icon{
-    width:22px; height:22px; border-radius:7px; display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
+  .card.has-val{ border-color: var(--amber); background: var(--amber-soft); }
+  .card-title{ font-size: 13px; font-weight:600; color: var(--text); margin-bottom: 8px; line-height:1.2; }
+  .card-fam{ font-size: 10px; font-family: var(--mono); color: var(--muted); text-transform:uppercase; margin-bottom: 10px; }
+  .card-controls{ display:flex; align-items:center; justify-content:space-between; margin-top:auto; }
+  
+  .btn-qty{
+    width:30px; height:30px; border-radius:6px; border:1px solid var(--line-soft);
+    background: var(--surface-2); color: var(--text); font-size:16px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none;
   }
-  .fam-icon svg{ width:13px; height:13px; }
-  .fam-name{
-    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.1em;
-    color: var(--text); text-transform: uppercase; font-weight:600;
-  }
-  .fam-progress{
-    font-family: var(--mono); font-size: 10px; color: var(--muted-dim);
-  }
-  .fam-header::after{ content:""; flex:1; height:1px; background: var(--line-soft); }
-
-  .row{
-    display:flex; align-items:center; gap:10px;
-    padding: 11px 8px 11px 10px;
-    border-bottom: 1px solid var(--line-soft);
-    border-left: 2px solid transparent;
-    transition: background .15s ease, border-color .15s ease;
-  }
-  .row.counted{ background: rgba(99,176,132,0.08); border-left-color: var(--green); }
-  .rname{ flex:1; min-width:0; font-size: 14px; line-height:1.32; color: var(--text); }
-  .counter{ display:flex; align-items:center; gap:0; flex-shrink:0; }
-  .cbtn{
-    width:32px; height:32px; border-radius:8px; border:1px solid var(--line-soft);
-    background: var(--surface-2); color: var(--text); font-size:17px;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer; user-select:none; transition: background .1s ease, transform .08s ease;
-  }
-  .cbtn:active{ background: var(--amber-dim); transform: scale(0.92); }
-  .cnum{
-    width: 46px; text-align:center; font-family: var(--mono); font-size:15.5px;
+  .btn-qty:active{ background: var(--amber); color:#000; }
+  .input-qty{
+    width:42px; text-align:center; font-family: var(--mono); font-size:14px;
     background:none; border:none; color: var(--text); font-weight:700;
   }
-  .cnum:focus{ outline:none; color: var(--amber); }
-
-  .empty{ text-align:center; color:var(--muted); padding: 70px 30px 40px; font-size:13.5px; line-height:1.5; }
+  .input-qty:focus{ outline:none; color: var(--amber); }
 
   footer{
     position:fixed; bottom:0; left:0; right:0; z-index:20;
-    background: var(--surface);
-    border-top: 1px solid var(--line-soft);
+    background: var(--surface); border-top: 1px solid var(--line-soft);
     padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
     display:flex; align-items:center; gap:8px;
-    box-shadow: 0 -8px 24px rgba(0,0,0,0.25);
   }
-  .stat{ font-family: var(--mono); line-height:1.15; }
-  .stat .n{ font-size:16px; color:var(--amber); font-weight:700; transition: transform .12s ease; }
-  .stat .n.bump{ transform: scale(1.18); }
-  .stat .l{ font-size:8.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.09em; }
-  .spacer{flex:1;}
-  #copyBtn, #excelBtn{
-    display:flex; align-items:center; gap:6px;
-    border:none; border-radius:10px;
-    padding: 10px 13px; font-size:12.5px; font-weight:700; cursor:pointer;
-    font-family: var(--sans); white-space:nowrap;
-    transition: transform .08s ease, background .15s ease;
+  .stat{ font-family: var(--mono); }
+  .stat .n{ font-size:16px; color:var(--amber); font-weight:700; }
+  .stat .l{ font-size:9px; color:var(--muted); text-transform:uppercase; }
+  .spacer{ flex:1; }
+  
+  .action-btn{
+    display:flex; align-items:center; gap:6px; border:none; border-radius:8px;
+    padding: 10px 12px; font-size:12px; font-weight:700; cursor:pointer;
   }
-  #copyBtn:active, #excelBtn:active{ transform: scale(0.96); }
-  #copyBtn svg, #excelBtn svg{ width:14px; height:14px; }
-  #copyBtn{ background: var(--surface-2); color: var(--text); border:1px solid var(--line-soft); }
   #excelBtn{ background: var(--green); color:#0A1F13; }
-  #copyBtn.copied{ background: var(--green); color:#0A1F13; }
-  #excelBtn.done{ background: var(--amber); color:#201404; }
+  #copyBtn{ background: var(--surface-2); color: var(--text); border:1px solid var(--line-soft); }
 </style>
 </head>
 <body>
 
-<div class="glow-layer"></div>
-
 <header>
   <div class="titlerow">
     <div>
-      <p class="eyebrow">Bar &amp; Bodega</p>
-      <h1 class="title">Conteo <span class="accent">rápido</span> — Son Molí</h1>
+      <p class="eyebrow">Gestión de Stock</p>
+      <h1 class="title">Inventario <span class="accent">Son Molí</span></h1>
     </div>
     <div class="datebadge" id="dateBadge"></div>
   </div>
-  <div class="rule"></div>
   <div class="searchwrap">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
     <input id="search" type="text" placeholder="Buscar producto…" autocomplete="off">
-    <button id="clearSearch">✕</button>
   </div>
-  <div class="chips" id="chips"></div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('BEBIDAS')">Bar</div>
+    <div class="tab" onclick="switchTab('MINIBAR')">Minibar</div>
+    <div class="tab" onclick="switchTab('COCINA')">Cocina</div>
+  </div>
 </header>
 
-<main id="list"></main>
+<main>
+  <div class="card-grid" id="grid"></div>
+</main>
 
 <footer>
   <div class="stat"><div class="n" id="countedN">0</div><div class="l">contados</div></div>
-  <div class="stat"><div class="n" id="totalEur">0,00 €</div><div class="l">valor</div></div>
   <div class="spacer"></div>
-  <button id="excelBtn">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M5 20h14"/></svg>
-    Excel
-  </button>
-  <button id="copyBtn">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-    Copiar
-  </button>
+  <button class="action-btn" id="excelBtn" onclick="exportExcel()">Excel</button>
+  <button class="action-btn" id="copyBtn" onclick="copyData()">Copiar</button>
 </footer>
 
 <script>
 const ITEMS = [
   {"p": "6435, ALHAMBRA RESERVA 1925 33CL", "f": "CERVEZA", "pr": 1.87, "s": "BEBIDAS"},
-  {"p": "PRD0000617 ALHAMBRA RESERVA 1925 VIDRIO NR 33CL CAJA 24U", "f": "CERVEZA", "pr": 1.18, "s": "BEBIDAS"},
-  {"p": "CJ13, CAJA DAMM BOT 1/3RET P PLAS", "f": "CERVEZA", "pr": 1.47, "s": "BEBIDAS"},
+  {"p": "PRD0000617 ALHAMBRA RESERVA 1925 33CL", "f": "CERVEZA", "pr": 1.18, "s": "BEBIDAS"},
   {"p": "EC13, DAURA DAMM 1/3 RET. CAJ.", "f": "CERVEZA", "pr": 1.507, "s": "BEBIDAS"},
   {"p": "ED13 ESTRELLA DAMM 1/3RET.pp", "f": "CERVEZA", "pr": 1.4, "s": "BEBIDAS"},
-  {"p": "PRD0005393, MAHOU 0/0 TOSTADA 33 CL 24 U.", "f": "CERVEZA", "pr": 1.03, "s": "BEBIDAS"},
-  {"p": "110450, ROSA BLANCA 1/3 RET C/24 UN", "f": "CERVEZA", "pr": 1.52, "s": "BEBIDAS"},
-  {"p": "3076FRANZISKANER WEISSBIER", "f": "CERVEZA", "pr": 1.73, "s": "BEBIDAS"},
-  {"p": "3074FRANZISKANER WEISSBIER 00", "f": "CERVEZA", "pr": 1.7, "s": "BEBIDAS"},
-  {"p": "MJG12, AGUA FONT MAJOR 1/2 GAS RET", "f": "AGUA", "pr": 0.312, "s": "BEBIDAS"},
-  {"p": "MJ12, AGUA FONT MAJOR 1/2 RET CJ", "f": "AGUA", "pr": 0.27, "s": "BEBIDAS"},
-  {"p": "544 -2, COCA COLA ZERO VR237 C24 UN", "f": "REFRESCO", "pr": 0.706, "s": "BEBIDAS"},
+  {"p": "PRD0005393, MAHOU 0/0 TOSTADA 33 CL", "f": "CERVEZA", "pr": 1.03, "s": "BEBIDAS"},
+  {"p": "110450, ROSA BLANCA 1/3 RET C/24", "f": "CERVEZA", "pr": 1.52, "s": "BEBIDAS"},
+  {"p": "3076 FRANZISKANER WEISSBIER", "f": "CERVEZA", "pr": 1.73, "s": "BEBIDAS"},
+  {"p": "3074 FRANZISKANER WEISSBIER 00", "f": "CERVEZA", "pr": 1.7, "s": "BEBIDAS"},
+  {"p": "544 -2, COCA COLA ZERO VR237", "f": "REFRESCO", "pr": 0.706, "s": "BEBIDAS"},
   {"p": "NESTEA CJ 24 UD", "f": "REFRESCO", "pr": 0.97, "s": "BEBIDAS"},
-  {"p": "1080 COCA COLA LATA 33 C24", "f": "REFRESCO", "pr": 1.61, "s": "BEBIDAS"},
-  {"p": "544, COCA COLA VR237 C24 UN", "f": "REFRESCO", "pr": 0.74, "s": "BEBIDAS"},
-  {"p": "0194, COLA PUIG 0,2L NO RET 24UD", "f": "REFRESCO", "pr": 0.69, "s": "BEBIDAS"},
-  {"p": "534, FANTA LIM VR237 C24", "f": "REFRESCO", "pr": 0.63, "s": "BEBIDAS"},
-  {"p": "524, FANTA NARANJA VR237 C24", "f": "REFRESCO", "pr": 0.63, "s": "BEBIDAS"},
-  {"p": "FTP15B24 FEVER TREE GRAPEFRUIT", "f": "REFRESCO", "pr": 1.42, "s": "BEBIDAS"},
-  {"p": "FT115B24 FEVER TREE TONIC", "f": "REFRESCO", "pr": 1.39, "s": "BEBIDAS"},
-  {"p": "4417, FUZE LIMON VR30 C24", "f": "REFRESCO", "pr": 0.74, "s": "BEBIDAS"},
-  {"p": "0189, GINGER BEER PUIG 0,2 NO RET 24UD", "f": "REFRESCO", "pr": 0.84, "s": "BEBIDAS"},
-  {"p": "0191, LIMONADA PUIG 0,2L NO RET 24UD", "f": "REFRESCO", "pr": 0.69, "s": "BEBIDAS"},
-  {"p": "0195, PINYA PUIG 33CL NO RET 24UD", "f": "REFRESCO", "pr": 0.76, "s": "BEBIDAS"},
-  {"p": "RBLISS LEM MIXER VR20 C24 HT", "f": "REFRESCO", "pr": 1.33, "s": "BEBIDAS"},
-  {"p": "RBLISS SIG TON WTR VR20 C24", "f": "REFRESCO", "pr": 1.33, "s": "BEBIDAS"},
-  {"p": "3919, RBLISS SODA VNR20 C24", "f": "REFRESCO", "pr": 0.87, "s": "BEBIDAS"},
-  {"p": "3901-1, RBLISS TON WTR VR20 C24", "f": "REFRESCO", "pr": 0.92, "s": "BEBIDAS"},
+  {"p": "1080 COCA COLA LATA 33", "f": "REFRESCO", "pr": 1.61, "s": "BEBIDAS"},
+  {"p": "544, COCA COLA VR237", "f": "REFRESCO", "pr": 0.74, "s": "BEBIDAS"},
+  {"p": "534, FANTA LIM VR237", "f": "REFRESCO", "pr": 0.63, "s": "BEBIDAS"},
+  {"p": "524, FANTA NARANJA VR237", "f": "REFRESCO", "pr": 0.63, "s": "BEBIDAS"},
+  {"p": "RBLISS LEM MIXER VR20", "f": "REFRESCO", "pr": 1.33, "s": "BEBIDAS"},
+  {"p": "RBLISS SIG TON WTR VR20", "f": "REFRESCO", "pr": 1.33, "s": "BEBIDAS"},
   {"p": "2548, SPRITE VR20 C24 UN", "f": "REFRESCO", "pr": 0.58, "s": "BEBIDAS"},
-  {"p": "0193, TARONJADA PUIG 0,2L NO RET 24UD", "f": "REFRESCO", "pr": 0.69, "s": "BEBIDAS"},
-  {"p": "0192, TONICA MARINA PUIG 0,2L NO RET 24UD", "f": "REFRESCO", "pr": 0.74, "s": "BEBIDAS"},
-  {"p": "FTG15B24FEVER TREE GINGER ALE", "f": "REFRESCO", "pr": 1.43, "s": "BEBIDAS"},
-  {"p": "FTB15B24FEVER TREE GINGER BEER", "f": "REFRESCO", "pr": 1.45, "s": "BEBIDAS"},
-  {"p": "0ZU0225, PAGO ARANDANOS 20CL 12 U", "f": "ZUMO", "pr": 1.625, "s": "BEBIDAS"},
-  {"p": "0ZU0049, PAGO MELOCOTON 20CL 24U", "f": "ZUMO", "pr": 1.28, "s": "BEBIDAS"},
-  {"p": "0ZU0221, PAGO PIÑA 1L PET 6U", "f": "ZUMO", "pr": 3.01, "s": "BEBIDAS"},
-  {"p": "0ZU0048, PAGO PIÑA 20CL 24U", "f": "ZUMO", "pr": 1.28, "s": "BEBIDAS"},
-  {"p": "0ZU0230, PAGO ZUMO DE MANZANA 20CL 12 U", "f": "ZUMO", "pr": 2.52, "s": "BEBIDAS"},
-  {"p": "0RF0296, RED BULL ENERGY DRINK 25 CL LATA 24U", "f": "ZUMO", "pr": 1.12, "s": "BEBIDAS"},
-  {"p": "54499267 ZUMO MINUTE MAID MANZANA", "f": "ZUMO", "pr": 0.61, "s": "BEBIDAS"},
-  {"p": "40822716 ZUMO MINUTE MAID MELOCOTON", "f": "ZUMO", "pr": 0.61, "s": "BEBIDAS"},
-  {"p": "54492974 ZUMO MINUTE MAID NARANJA", "f": "ZUMO", "pr": 0.61, "s": "BEBIDAS"},
-  {"p": "54007567 ZUMO MINUTE MAID NARANJA", "f": "ZUMO", "pr": 0.61, "s": "BEBIDAS"},
-  {"p": "54491090 ZUMO MINUTE MAID PIÑA", "f": "ZUMO", "pr": 0.61, "s": "BEBIDAS"},
-  {"p": "54492982 ZUMO MINUTE MAID TOMATE", "f": "ZUMO", "pr": 0.61, "s": "BEBIDAS"},
-  {"p": "00008109, ALBARIÑO PUERTA SANTA 3/4", "f": "VINO BLANCO", "pr": 7.7, "s": "BEBIDAS"},
-  {"p": "ALBARIÑO TEMPUS VIVENDI", "f": "VINO BLANCO", "pr": 12.6, "s": "BEBIDAS"},
-  {"p": "00001706 BORDOY MARES BLANC 3/4", "f": "VINO BLANCO", "pr": 8.47, "s": "BEBIDAS"},
-  {"p": "00001706 CAN AXARTELL BLANC 3/5", "f": "VINO BLANCO", "pr": 8.47, "s": "BEBIDAS"},
-  {"p": "032019, CAN MAJORCAL BUTIBALAUSI BLANC 2022", "f": "VINO BLANCO", "pr": 7.81, "s": "BEBIDAS"},
-  {"p": "STA CATARINA PREMSAL", "f": "VINO BLANCO", "pr": 10.15, "s": "BEBIDAS"},
-  {"p": "chablis jean collet", "f": "VINO BLANCO", "pr": 19.9, "s": "BEBIDAS"},
+  {"p": "00008109, ALBARIÑO PUERTA SANTA", "f": "VINO BLANCO", "pr": 7.7, "s": "BEBIDAS"},
   {"p": "PEDRO ESCUDERO SAUVIGNON", "f": "VINO BLANCO", "pr": 6.95, "s": "BEBIDAS"},
   {"p": "PEDRO ESCUDERO VERDEJO", "f": "VINO BLANCO", "pr": 6.95, "s": "BEBIDAS"},
-  {"p": "00005001PINNA FIDELIS BLANCO VERDEJO 3/4", "f": "VINO BLANCO", "pr": 4.86, "s": "BEBIDAS"},
-  {"p": "00008131 GARGALO GODELLO 2023 3/4", "f": "VINO BLANCO", "pr": 9.96, "s": "BEBIDAS"},
-  {"p": "VALSERRANO GRAN RESERVA BLANCO", "f": "VINO BLANCO", "pr": 25.5, "s": "BEBIDAS"},
-  {"p": "SA GRUTA BLANC ECO", "f": "VINO BLANCO", "pr": 8.4, "s": "BEBIDAS"},
-  {"p": "00001765 MADO 3/6", "f": "VINO BLANCO", "pr": 11.74, "s": "BEBIDAS"},
-  {"p": "00001074 MASIA BATLE BLANC DE BLANC 3/4", "f": "VINO BLANCO", "pr": 9.67, "s": "BEBIDAS"},
-  {"p": "00001288 MIGUEL GELABERT CHARDONNAY ROURE 3/4", "f": "VINO BLANCO", "pr": 11.42, "s": "BEBIDAS"},
-  {"p": "00001017 MIQUEL OLIVER ORIGI BLANC 23 3/4", "f": "VINO BLANCO", "pr": 9.12, "s": "BEBIDAS"},
-  {"p": "A18001 MORTIX RACO FRED BLANC", "f": "VINO BLANCO", "pr": 14, "s": "BEBIDAS"},
-  {"p": "BHILAR PHINCA HAPA TTO", "f": "VINO BLANCO", "pr": 16.8, "s": "BEBIDAS"},
-  {"p": "AROTZ TXAKOLI", "f": "VINO BLANCO", "pr": 16.78, "s": "BEBIDAS"},
-  {"p": "RIESLING VON BUHL DIDESHEIMER", "f": "VINO BLANCO", "pr": 13.8, "s": "BEBIDAS"},
-  {"p": "00001285 ARMERO ADROVER FINCA SON PROHENS ROS", "f": "VINO ROSADO", "pr": 15.35, "s": "BEBIDAS"},
-  {"p": "ALMA BOHEMIA DE ALTANZA ROSE", "f": "VINO ROSADO", "pr": 6.4, "s": "BEBIDAS"},
-  {"p": "00001744 CAN AXARTELL ROSADO 3/4", "f": "VINO ROSADO", "pr": 10.4, "s": "BEBIDAS"},
-  {"p": "1928 ECO BINIGRAU", "f": "VINO ROSADO", "pr": 9.75, "s": "BEBIDAS"},
-  {"p": "00007178 MURVIEDRO SERICIS PINOT NOIR ROSADO 3/4", "f": "VINO ROSADO", "pr": 8.35, "s": "BEBIDAS"},
-  {"p": "IMPROMPTU P.NOIR ROSADO", "f": "VINO ROSADO", "pr": 17.55, "s": "BEBIDAS"},
-  {"p": "CHATEAU PEYRASSOL ROSE", "f": "VINO ROSADO", "pr": 20.7, "s": "BEBIDAS"},
-  {"p": "ANAVA ROSAT", "f": "VINO ROSADO", "pr": 12.5, "s": "BEBIDAS"},
-  {"p": "QUELIAS ROSE", "f": "VINO ROSADO", "pr": 8.6, "s": "BEBIDAS"}, {"p": "4806 VIÑA SON FANGOS ROSAT", "f": "VINO ROSADO", "pr": 8, "s": "BEBIDAS"},
-  {"p": "MAZONE BAROLO PAGO MERIAME", "f": "VINO TINTO", "pr": 43, "s": "BEBIDAS"},
-  {"p": "GARAGEWINE BRUJIDERA", "f": "VINO TINTO", "pr": 11.35, "s": "BEBIDAS"},
-  {"p": "BOBOS C.LA BORRACHA BOBAL", "f": "VINO TINTO", "pr": 18.2, "s": "BEBIDAS"},
-  {"p": "2552 CAN MAJORAL CALLET", "f": "VINO TINTO", "pr": 10.8, "s": "BEBIDAS"},
+  {"p": "00001285 ARMERO ADROVER FINCA ROS", "f": "VINO ROSADO", "pr": 15.35, "s": "BEBIDAS"},
   {"p": "00754, CORIMBO 2019", "f": "VINO TINTO", "pr": 18.71, "s": "BEBIDAS"},
-  {"p": "NABAL CRIANZA", "f": "VINO TINTO", "pr": 15.7, "s": "BEBIDAS"},
-  {"p": "A20002DUNOR CUROLLA", "f": "VINO TINTO", "pr": 17.85, "s": "BEBIDAS"},
-  {"p": "00004393 LA VICALANDA TINTO RESERVA 3/4", "f": "VINO TINTO", "pr": 22.18, "s": "BEBIDAS"},
-  {"p": "FEDELLOS LOMBA DOS ARES", "f": "VINO TINTO", "pr": 13.29, "s": "BEBIDAS"},
-  {"p": "LOS LOROS LISTAN BLANCO", "f": "VINO TINTO", "pr": 13.4, "s": "BEBIDAS"},
-  {"p": "TIO MARTIN CRIANZA", "f": "VINO TINTO", "pr": 6.5, "s": "BEBIDAS"},
-  {"p": "NEXUS ONE", "f": "VINO TINTO", "pr": 8.55, "s": "BEBIDAS"},
-  {"p": "00001062, RIBAS SIO NEGRE 2022 3/4", "f": "VINO TINTO", "pr": 17.07, "s": "BEBIDAS"},
-  {"p": "SEÑORIO DA TORRE", "f": "VINO TINTO", "pr": 7.95, "s": "BEBIDAS"},
-  {"p": "BUYXET SIRA NEGRE", "f": "VINO TINTO", "pr": 7.95, "s": "BEBIDAS"},
-  {"p": "THREE STICKS GAP'S CROWN PINOT NOIR", "f": "VINO TINTO", "pr": 58.5, "s": "BEBIDAS"},
-  {"p": "ATLANTIDA TINTO", "f": "VINO TINTO", "pr": 20.3, "s": "BEBIDAS"},
-  {"p": "00004973 TOBIA SELECCION DE AUTOR TINTO CZA 3/4", "f": "VINO TINTO", "pr": 8.75, "s": "BEBIDAS"},
-  {"p": "00001240 TONI GELABERT ILLENC NEGRE 3/4", "f": "VINO TINTO", "pr": 19.8, "s": "BEBIDAS"},
-  {"p": "4820 TORRE DES CANONGE NEGRE", "f": "VINO TINTO", "pr": 28, "s": "BEBIDAS"},
-  {"p": "SCRIANI VALPOLICELLA RIPASSO", "f": "VINO TINTO", "pr": 14, "s": "BEBIDAS"},
-  {"p": "MAURO VENDIMIA SELECCIONADA", "f": "VINO TINTO", "pr": 55.5, "s": "BEBIDAS"},
-  {"p": "CAN VERDURA NEGRE", "f": "VINO TINTO", "pr": 8.2, "s": "BEBIDAS"},
-  {"p": "CAN VERDURA SON AGULLO", "f": "VINO TINTO", "pr": 26.6, "s": "BEBIDAS"},
-  {"p": "B23014PEDRO XIMENEZ COLECCIONR.AMILLO", "f": "VINO GENEROSO", "pr": 29.74, "s": "BEBIDAS"},
-  {"p": "27110PROVETTO BRUT 3/4", "f": "CAVA", "pr": 2.09, "s": "BEBIDAS"},
-  {"p": "CASTELROIG BRUT ROSADO", "f": "CAVA", "pr": 10.95, "s": "BEBIDAS"},
-  {"p": "00026060 CAVA ARS COLLECTA BLANC DE BLANCS 3/4", "f": "CAVA", "pr": 15.02, "s": "BEBIDAS"},
-  {"p": "00028121 CAVA MASCARO INITIUM BRUT 3/4", "f": "CAVA", "pr": 6.99, "s": "BEBIDAS"},
-  {"p": "00481, CAVA MASIA SALAT ORGANIC BRUT NATURE", "f": "CAVA", "pr": 4.42, "s": "BEBIDAS"},
-  {"p": "00027270 CAVA MURVIEDRO ARTS DE LUNA BRUT 3/4", "f": "CAVA", "pr": 8.63, "s": "BEBIDAS"},
-  {"p": "GRAMONA IMPERIAL BRUT", "f": "CAVA", "pr": 19.3, "s": "BEBIDAS"},
-  {"p": "191003CAVA JUVE DE CAMPSESSENTIAL PURPURA", "f": "CAVA", "pr": 7, "s": "BEBIDAS"},
-  {"p": "CHAMPAGNE LE TRADITION BRUT ALLOUCHE", "f": "CAVA", "pr": 23.9, "s": "BEBIDAS"},
-  {"p": "CAVA NIT DE LLUNA PLENA", "f": "CAVA", "pr": 6.9, "s": "BEBIDAS"},
-  {"p": "FREIXENET OO", "f": "CAVA", "pr": 6.35, "s": "BEBIDAS"},
-  {"p": "00027110 PROVETTO", "f": "CAVA", "pr": 2.09, "s": "BEBIDAS"},
-  {"p": "SABATÉ I COCA MOSSET", "f": "CAVA", "pr": 12.4, "s": "BEBIDAS"},
-  {"p": "01148, TAITTINGER BRUT RESERVE", "f": "CAVA", "pr": 46.96, "s": "BEBIDAS"},
-  {"p": "CAVA TANTUM ERGO PINOT ROSE", "f": "CAVA", "pr": 20.25, "s": "BEBIDAS"},
-  {"p": "GORDONS 0.70", "f": "GIN", "pr": 10.29, "s": "BEBIDAS"},
-  {"p": "00048010bombay saphire", "f": "GIN", "pr": 14.73, "s": "BEBIDAS"},
+  {"p": "00001062, RIBAS SIO NEGRE 2022", "f": "VINO TINTO", "pr": 17.07, "s": "BEBIDAS"},
+  {"p": "00048010 BOMBAY SAPHIRE", "f": "GIN", "pr": 14.73, "s": "BEBIDAS"},
   {"p": "MONKEY 47 0.50", "f": "GIN", "pr": 30.41, "s": "BEBIDAS"},
-  {"p": "GIN BERGAMOTA CJ 25 UD 100 ML", "f": "GIN", "pr": 6.44, "s": "BEBIDAS"},
-  {"p": "00098014, GIN BROCKMAN'S 1LITRO", "f": "GIN", "pr": 22.8, "s": "BEBIDAS"},
-  {"p": "200622, GIN CABRABOC MALLORCA", "f": "GIN", "pr": 18.95, "s": "BEBIDAS"},
   {"p": "00048013, GIN HENDRICK'S 70 CL", "f": "GIN", "pr": 25.35, "s": "BEBIDAS"},
   {"p": "200238, GIN MARE 70 CL", "f": "GIN", "pr": 29.3, "s": "BEBIDAS"},
   {"p": "200450, GIN PALMA 70 CL", "f": "GIN", "pr": 30.37, "s": "BEBIDAS"},
-  {"p": "00048079, GIN TANQUERAY 0.0%", "f": "GIN", "pr": 11.63, "s": "BEBIDAS"},
-  {"p": "00048018, GIN TANQUERAY TEN LITRO", "f": "GIN", "pr": 25.25, "s": "BEBIDAS"},
-  {"p": "GIN LA MALLORQUINA CJ 25 UD 100 ML", "f": "GIN", "pr": 6.44, "s": "BEBIDAS"},
-  {"p": "NORDES", "f": "GIN", "pr": 22.4, "s": "BEBIDAS"},
-  {"p": "XORIGUER O,70", "f": "GIN", "pr": 10.58, "s": "BEBIDAS"},
-  {"p": "SEAGRRAMS", "f": "GIN", "pr": 4.01, "s": "BEBIDAS"},
-  {"p": "GIN VERMELL CJ 25 UD 100 ML", "f": "GIN", "pr": 6.44, "s": "BEBIDAS"},
-  {"p": "G VINE 0.70", "f": "GIN", "pr": 25.76, "s": "BEBIDAS"},
-  {"p": "51038STOLICHNAYA", "f": "VODKA", "pr": 9.35, "s": "BEBIDAS"},
-  {"p": "51005ABSOLUT AZUL", "f": "VODKA", "pr": 12.35, "s": "BEBIDAS"},
-  {"p": "51002ABSOLUT VAINILLA", "f": "VODKA", "pr": 15.53, "s": "BEBIDAS"},
-  {"p": "51200CIROC VODKA", "f": "VODKA", "pr": 32.34, "s": "BEBIDAS"},
-  {"p": "00051068, VODKA BELUGA NOBLE 70CL", "f": "VODKA", "pr": 24.73, "s": "BEBIDAS"},
-  {"p": "0050150, VODKA BELVEDERE 1 LITRO", "f": "VODKA", "pr": 30.82, "s": "BEBIDAS"},
+  {"p": "51005 ABSOLUT AZUL", "f": "VODKA", "pr": 12.35, "s": "BEBIDAS"},
   {"p": "00051013, VODKA GREY GOOSE 1 L", "f": "VODKA", "pr": 35.22, "s": "BEBIDAS"},
-  {"p": "00051033, VODKA SMIRNOFF LITRO IRR. DIAGEO", "f": "VODKA", "pr": 13.26, "s": "BEBIDAS"},
-  {"p": "00050125 , RON ZACAPA 23 AÑOS 70 CL", "f": "RON", "pr": 44.66, "s": "BEBIDAS"},
-  {"p": "00050000, RON AMAZONAS 70 CL", "f": "RON", "pr": 12.21, "s": "BEBIDAS"},
-  {"p": "00050027 RON BACARDI LITRO", "f": "RON", "pr": 14.03, "s": "BEBIDAS"},
-  {"p": "00050125, RON BRUGAL 1888 70 CL", "f": "RON", "pr": 35.31, "s": "BEBIDAS"},
-  {"p": "00050004 RON DIPLOMATICO", "f": "RON", "pr": 30.46, "s": "BEBIDAS"},
-  {"p": "00050004, RON DIPLOMATICO RESERVA EXCLUSIVA 70 CL", "f": "RON", "pr": 30.46, "s": "BEBIDAS"},
+  {"p": "00050125 , RON ZACAPA 23 AÑOS", "f": "RON", "pr": 44.66, "s": "BEBIDAS"},
   {"p": "00050080 RON HAVANA CLUB 7 AÑOS", "f": "RON", "pr": 19.83, "s": "BEBIDAS"},
-  {"p": "50115SANTA TERESA RON", "f": "RON", "pr": 11.76, "s": "BEBIDAS"},
-  {"p": "55006CARDHU", "f": "WHISKY", "pr": 25.05, "s": "BEBIDAS"},
-  {"p": "00053027WHISKY JACK DANIELS", "f": "WHISKY", "pr": 24.2, "s": "BEBIDAS"},
-  {"p": "52019MAKERS MARK BOURBON", "f": "WHISKY", "pr": 21.8, "s": "BEBIDAS"},
-  {"p": "54030CHIVAS REGAL", "f": "WHISKY", "pr": 23.7, "s": "BEBIDAS"},
-  {"p": "00053033, WHISKY JIM BEAN 70CL", "f": "WHISKY", "pr": 13.3, "s": "BEBIDAS"},
-  {"p": "00054039, WHISKY JOHNNIE WALKER BLACK IRR", "f": "WHISKY", "pr": 22.83, "s": "BEBIDAS"},
-  {"p": "00055066, WHISKY JOHNNIE WALKER GOLD 70CL DIAGEO", "f": "WHISKY", "pr": 40.61, "s": "BEBIDAS"},
-  {"p": "00052045 WHISKY JOHNNIE WALKER RED 70CL DIAGEO", "f": "WHISKY", "pr": 12.22, "s": "BEBIDAS"},
-  {"p": "00058009TEQUILAREPOSADO", "f": "TEQUILA", "pr": 13.48, "s": "BEBIDAS"},
-  {"p": "000058011TEQUILA SILVER CUERVO BLANCO", "f": "TEQUILA", "pr": 12.58, "s": "BEBIDAS"},
-  {"p": "163164, TEQUILA PATRON AÑEJO 70 CL", "f": "TEQUILA", "pr": 60.91, "s": "BEBIDAS"},
-  {"p": "00058006 TEQUILA PATRON REPOSADO 70 CL", "f": "TEQUILA", "pr": 45.11, "s": "BEBIDAS"},
-  {"p": "163162, TEQUILA PATRON SILVER 70 CL", "f": "TEQUILA", "pr": 39.13, "s": "BEBIDAS"},
-  {"p": "00043002 BRANDY CARDENAL MENDOZA 70 CL", "f": "BRANDY", "pr": 19.93, "s": "BEBIDAS"},
-  {"p": "00043002, BRANDY CARDENAL MENDOZA 70CL", "f": "BRANDY", "pr": 19.93, "s": "BEBIDAS"},
-  {"p": "200241, BRANDY CARLOS I 70 CL", "f": "BRANDY", "pr": 23.72, "s": "BEBIDAS"},
-  {"p": "00043070, BRANDY SUAU 15 AÑOS", "f": "BRANDY", "pr": 18.23, "s": "BEBIDAS"},
-  {"p": "00043008 BRNADY CARLOS I 70CL", "f": "BRANDY", "pr": 22.07, "s": "BEBIDAS"},
+  {"p": "00053027 WHISKY JACK DANIELS", "f": "WHISKY", "pr": 24.2, "s": "BEBIDAS"},
+  {"p": "00054039, JOHNNIE WALKER BLACK", "f": "WHISKY", "pr": 22.83, "s": "BEBIDAS"},
   {"p": "200170, COGNAC REMY MARTIN VSOP", "f": "BRANDY", "pr": 21.00, "s": "BEBIDAS"},
-  {"p": "00038032 MARTINI AMBRATO RESERVA 3/4 18º", "f": "VERMOUTH", "pr": 10.92, "s": "BEBIDAS"},
-  {"p": "A50516, MARTINI RISERVA AMBRATO", "f": "VERMOUTH", "pr": 10.92, "s": "BEBIDAS"},
-  {"p": "A51155, MARTINI RISERVA RUBINO", "f": "VERMOUTH", "pr": 10.92, "s": "BEBIDAS"},
-  {"p": "00038033 MARTINI RUBINO RESERVA 3/4 18º", "f": "VERMOUTH", "pr": 10.92, "s": "BEBIDAS"},
-  {"p": "00038009 VERMUT RUMBO BLANC MOYA 75 CL", "f": "VERMOUTH", "pr": 14.84, "s": "BEBIDAS"},
-  {"p": "00038010 VERMUT RUMBO NEGREOYA 75 CL", "f": "VERMOUTH", "pr": 14.84, "s": "BEBIDAS"},
-  {"p": "VERMUTYZAGUIRRE", "f": "VERMOUTH", "pr": 5.29, "s": "BEBIDAS"},
-  {"p": "CACHACA 51", "f": "LICOR", "pr": 12.04, "s": "BEBIDAS"},
-  {"p": "59051COINTREAU", "f": "LICOR", "pr": 13.25, "s": "BEBIDAS"},
-  {"p": "59343PASSOA", "f": "LICOR", "pr": 9.99, "s": "BEBIDAS"},
-  {"p": "62000FRANGELICO", "f": "LICOR", "pr": 12.04, "s": "BEBIDAS"},
-  {"p": "165008, AMARETTO DI SARONNO 70 CL", "f": "LICOR", "pr": 13.44, "s": "BEBIDAS"},
-  {"p": "157146, AMARO MONTENEGRO 0,700", "f": "LICOR", "pr": 11.4, "s": "BEBIDAS"},
-  {"p": "157096, AMARO RAMAZZOTI 0.70", "f": "LICOR", "pr": 12.83, "s": "BEBIDAS"},
-  {"p": "00030035 ANIS SECO TRES CAIRES 70 CL", "f": "LICOR", "pr": 14.22, "s": "BEBIDAS"},
-  {"p": "00031014, CAMPARI 1 L", "f": "LICOR", "pr": 16.04, "s": "BEBIDAS"},
-  {"p": "00057000, CREMA BAILEYS 70 CL DIAGEO", "f": "LICOR", "pr": 16.4, "s": "BEBIDAS"},
-  {"p": "00059370, CREME DE CASSIS BOLS", "f": "LICOR", "pr": 8.87, "s": "BEBIDAS"},
-  {"p": "00031060 GRAPPA MARZADRO CALIERE BIANCA LITRO", "f": "LICOR", "pr": 12.52, "s": "BEBIDAS"},
-  {"p": "18MZTM17, GRAPPA TRENTINA MORBIDA MARZADRO 70 CL", "f": "LICOR", "pr": 12.52, "s": "BEBIDAS"},
-  {"p": "00059136, HERBES DOLCES -MOYA 1L", "f": "LICOR", "pr": 8.04, "s": "BEBIDAS"},
-  {"p": "00059164, HERBES MESCLADES - MOYA 70CL", "f": "LICOR", "pr": 8.55, "s": "BEBIDAS"},
-  {"p": "00059185, HERBES SEQUES - MOYA 1L", "f": "LICOR", "pr": 9.54, "s": "BEBIDAS"},
-  {"p": "JAMESON", "f": "LICOR", "pr": 14.87, "s": "BEBIDAS"},
-  {"p": "00031013, LICOR APEROL LITRO", "f": "LICOR", "pr": 11.4, "s": "BEBIDAS"},
-  {"p": "200304, LICOR CAMPARI 1 L", "f": "LICOR", "pr": 15.73, "s": "BEBIDAS"},
-  {"p": "200400, LICOR KAHLUA 70 CL", "f": "LICOR", "pr": 13.61, "s": "BEBIDAS"},
-  {"p": "200507, LICOR PERNOD 1 L", "f": "LICOR", "pr": 15.2, "s": "BEBIDAS"},
-  {"p": "00059212, LIMONCELLO MOYA 70CL", "f": "LICOR", "pr": 8.37, "s": "BEBIDAS"},
-  {"p": "59249 MALIBU", "f": "LICOR", "pr": 10.59, "s": "BEBIDAS"},
-  {"p": "59366TIA MARIA", "f": "LICOR", "pr": 13.22, "s": "BEBIDAS"},
   {"p": "PALO", "f": "LICOR", "pr": 13.10, "s": "BEBIDAS"},
-  {"p": "0003054 PERNOD LITRO", "f": "LICOR", "pr": 15.2, "s": "BEBIDAS"},
-  {"p": "00059118, PISCO DEMONIO ANDES ACOLADO 70CL", "f": "LICOR", "pr": 17.06, "s": "BEBIDAS"},
-  {"p": "00031059, SAMBUCA RAMAZZOTTI 70CL", "f": "LICOR", "pr": 9.83, "s": "BEBIDAS"},
-  {"p": "JNPR SPRZ 7O CL", "f": "LICOR", "pr": 16.04, "s": "BEBIDAS"},
-  {"p": "00059386, TRIPLE SEC MOYA LITRO", "f": "LICOR", "pr": 5.8, "s": "BEBIDAS"},
-  {"p": "00065951 SIROPE ODK AZÚCAR BLANQUILLA 75 CL", "f": "SIROPE", "pr": 7.85, "s": "BEBIDAS"},
-  {"p": "00062409 SIROPE ODK BANANA 75 CL", "f": "SIROPE", "pr": 10.47, "s": "BEBIDAS"},
-  {"p": "00062389 SIROPE ODK FRESA 75 CL", "f": "SIROPE", "pr": 10.47, "s": "BEBIDAS"},
-  {"p": "ANGOSTURA BITTER", "f": "INSUMOS COCTELERIA", "pr": 11.49, "s": "BEBIDAS"},
-  {"p": "7743.30, ARPEGGIO DESCAFEINADO", "f": "CAFÉ", "pr": 0.45, "s": "BEBIDAS"},
-  {"p": "7748.30, RISTRETTO", "f": "CAFÉ", "pr": 0.44, "s": "BEBIDAS"},
-  {"p": "CHMAUA, CHOCOLATE PERSONALIZADO CJ", "f": "CHOCOLATE", "pr": 1.8, "s": "BEBIDAS"},
-  {"p": "20Y, TARRO 60GR ALMENDRAS CON HIERBAS MEDITERRANEAS 24UD CJ", "f": "ALMENDRAS", "pr": 3.45, "s": "BEBIDAS"},
-  {"p": "7L, TARRO 60GR ALMENDRAS TOSTADAS 24 UD CJ", "f": "ALMENDRAS", "pr": 3.45, "s": "BEBIDAS"},
-  {"p": "PRINGLES 40 GR", "f": "SNACKS", "pr": 0.69, "s": "BEBIDAS"},
-  {"p": "KIT KAT", "f": "SNACKS", "pr": 0.68, "s": "BEBIDAS"},
-  {"p": "PATATILAS MEDITERR´NAEAS FLOR DE SAL 22 UD", "f": "SNACKS", "pr": 0.84, "s": "BEBIDAS"},
-  {"p": "GOMINOLA OSITOS HARIBO", "f": "SNACKS", "pr": 0.52, "s": "BEBIDAS"},
-  {"p": "0002598, ENVASES MAHOU VIDRIO RET 33CL", "f": "ENVASES", "pr": 0.07, "s": "BEBIDAS"},
-  {"p": "CAFÉ MUTANTE INTENSI 1KG", "f": "COCINA", "pr": 18.4, "s": "COCINA"},
-  {"p": "INFUSION MANZANILLA PIRAMIDE", "f": "COCINA", "pr": 0.4, "s": "COCINA"},
-  {"p": "INFUSION FRUTOS DEL BOSQUE PIRAMIDE", "f": "COCINA", "pr": 0.4, "s": "COCINA"},
-  {"p": "INFUSION TE VERDE PIRAMIDE", "f": "COCINA", "pr": 0.4, "s": "COCINA"},
-  {"p": "INFUSION TE NEGRO PIRAMIDE", "f": "COCINA", "pr": 0.4, "s": "COCINA"},
-  {"p": "CAFÉ DESCAFEINADO MUTANTE CAPSULAS", "f": "COCINA", "pr": 0.41, "s": "COCINA"},
-  {"p": "EDULCORANTE", "f": "COCINA", "pr": 0.33, "s": "COCINA"},
-  {"p": "AZUCAR MORENO", "f": "COCINA", "pr": 0.026, "s": "COCINA"},
-  {"p": "AZUCAR BLANCA SOBRE", "f": "COCINA", "pr": 0.026, "s": "COCINA"},
-  {"p": "LECHE ENTERA", "f": "COCINA", "pr": 1.201, "s": "COCINA"},
-  {"p": "LECHE SIN LACTOSA", "f": "COCINA", "pr": 1.424, "s": "COCINA"},
-  {"p": "LECHE SOJA", "f": "COCINA", "pr": 1.46, "s": "COCINA"},
-  {"p": "LECHE AVENA", "f": "COCINA", "pr": 1.607, "s": "COCINA"},
-  {"p": "LECHE ALMENDRA", "f": "COCINA", "pr": 1.598, "s": "COCINA"},
-  {"p": "KETCHUP", "f": "COCINA", "pr": 0.58, "s": "COCINA"},
-  {"p": "MOSTAZA", "f": "COCINA", "pr": 0.65, "s": "COCINA"},
-  {"p": "MAYONESA", "f": "COCINA", "pr": 0.64, "s": "COCINA"},
-  {"p": "SALSA LEA PERRINS", "f": "COCINA", "pr": 2.39, "s": "COCINA"},
-  {"p": "TABASCO", "f": "COCINA", "pr": 1.45, "s": "COCINA"},
   {"p": "HELADO HAAGEN D", "f": "HELADOS", "pr": 1.90, "s": "COCINA"},
-  {"p": "PRINGLES ORIGINAL", "f": "MINIBAR", "pr": 0.69003, "s": "MINIBAR"},
-  {"p": "KIT KAT", "f": "MINIBAR", "pr": 0.6887, "s": "MINIBAR"},
-  {"p": "HARIBO", "f": "MINIBAR", "pr": 0.5272, "s": "MINIBAR"},
-  {"p": "CAPSULAS DE CAFÉ", "f": "MINIBAR", "pr": 0.48, "s": "MINIBAR"},
-  {"p": "CAPSULAS DE CAFÉ DESCAFEINADO", "f": "MINIBAR", "pr": 0.45, "s": "MINIBAR"},
-  {"p": "RED BULL COCO", "f": "MINIBAR", "pr": 1.12, "s": "MINIBAR"},
-  {"p": "RED BULL", "f": "MINIBAR", "pr": 1.115, "s": "MINIBAR"},
-  {"p": "COKE", "f": "MINIBAR", "pr": 0.793, "s": "MINIBAR"},
-  {"p": "COKE ZERO", "f": "MINIBAR", "pr": 0.793, "s": "MINIBAR"},
-  {"p": "FANTA LIMON", "f": "MINIBAR", "pr": 0.738, "s": "MINIBAR"},
-  {"p": "FANTA NARANJA", "f": "MINIBAR", "pr": 0.738, "s": "MINIBAR"},
-  {"p": "VINO BATIBALAUSI BLANCO 750ML", "f": "MINIBAR", "pr": 7.81, "s": "MINIBAR"},
-  {"p": "CAVA JUVÉ & CAMPS 350ML", "f": "MINIBAR", "pr": 7.0, "s": "MINIBAR"},
-  {"p": "CERVEZA ROSA BLANCA", "f": "MINIBAR", "pr": 0.76, "s": "MINIBAR"},
-  {"p": "AGUA FONT MAJOR C/GAS", "f": "MINIBAR", "pr": 0.33, "s": "MINIBAR"},
-  {"p": "AGUA FONT MAJOR S/GAS", "f": "MINIBAR", "pr": 0.29, "s": "MINIBAR"}
+  {"p": "CAFÉ MUTANTE INTENSI 1KG", "f": "COCINA", "pr": 18.4, "s": "COCINA"},
+  {"p": "PRINGLES ORIGINAL", "f": "MINIBAR", "pr": 0.69, "s": "MINIBAR"},
+  {"p": "KIT KAT", "f": "MINIBAR", "pr": 0.68, "s": "MINIBAR"},
+  {"p": "HARIBO", "f": "MINIBAR", "pr": 0.52, "s": "MINIBAR"},
+  {"p": "COKE", "f": "MINIBAR", "pr": 0.79, "s": "MINIBAR"},
+  {"p": "COKE ZERO", "f": "MINIBAR", "pr": 0.79, "s": "MINIBAR"},
+  {"p": "CERVEZA ROSA BLANCA", "f": "MINIBAR", "pr": 0.76, "s": "MINIBAR"}
 ];
 
-const ICONS = {
-  glass: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l-1.2 9.5a3.8 3.8 0 0 1-3.8 3.3 3.8 3.8 0 0 1-3.8-3.3L7 3z"/><path d="M12 15.8V21m-3 0h6"/></svg>',
-  flute: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3h5l-.6 12a1.9 1.9 0 0 1-3.8 0L9.5 3z"/><path d="M12 15v6m-3 0h6"/><circle cx="11" cy="7" r=".4" fill="currentColor" stroke="none"/><circle cx="12.5" cy="10" r=".4" fill="currentColor" stroke="none"/></svg>',
-  bottle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4v3.5l1.5 2.3a3 3 0 0 1 .5 1.7V20a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V9.5a3 3 0 0 1 .5-1.7L10 5.5V2z"/><path d="M9 13h6"/></svg>',
-  mug: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h11v7a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-7z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3c-.7.8-.7 1.6 0 2.4M12 3c-.7.8-.7 1.6 0 2.4"/></svg>',
-  drop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5s6.5 7.2 6.5 12A6.5 6.5 0 1 1 5.5 14.5C5.5 9.7 12 2.5 12 2.5z"/></svg>',
-  can: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2.5"/><path d="M6 9h12M9 4V2.6c0-.3.3-.6.7-.6h4.6c.4 0 .7.3.7.6V4"/></svg>',
-  cup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M17 9h1.5a2.2 2.2 0 0 1 0 4.4H17"/><path d="M8 3.5c.9 1 .9 1.7 0 2.7M12 3.5c.9 1 .9 1.7 0 2.7"/></svg>',
-  box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5 12 3l8.5 4.5V16L12 21l-8.5-4.5V7.5z"/><path d="M3.5 7.5 12 12m0 0 8.5-4.5M12 12v9"/></svg>',
-};
+let counts = {};
+ITEMS.forEach((_, i) => counts[i] = '');
 
-const FAM_ICON_KEY = fam => {
-  if(['VINO BLANCO','VINO ROSADO','VINO TINTO','VINO GENEROSO'].includes(fam)) return 'glass';
-  if(fam === 'CAVA') return 'flute';
-  if(['GIN','VODKA','RON','WHISKY','TEQUILA','BRANDY','VERMOUTH','LICOR'].includes(fam)) return 'bottle';
-  if(fam === 'CERVEZA') return 'mug';
-  if(['AGUA','ZUMO','SIROPE'].includes(fam)) return 'drop';
-  if(fam === 'REFRESCO') return 'can';
-  if(fam === 'CAFÉ') return 'cup';
-  return 'box';
-};
+let activeTab = 'BEBIDAS';
+let searchFilter = '';
 
-const FAM_COLORS = {};
-const PALETTE = ['#B8536E','#5A85AC','#E8AC4C','#63B084','#9678BE','#D18A56','#579C9F','#C4708E','#8A9968','#D6B25A'];
-let ci = 0;
-ITEMS.forEach(it => {
-  if(!(it.f in FAM_COLORS)){ FAM_COLORS[it.f] = PALETTE[ci % PALETTE.length]; ci++; }
+const grid = document.getElementById('grid');
+
+function render() {
+  grid.innerHTML = '';
+  let filtered = ITEMS.map((it, idx) => ({...it, idx}))
+    .filter(it => it.s === activeTab);
+
+  if (searchFilter) {
+    const t = searchFilter.toLowerCase();
+    filtered = filtered.filter(it => it.p.toLowerCase().includes(t));
+  }
+
+  filtered.forEach(it => {
+    const card = document.createElement('div');
+    const hasVal = counts[it.idx] !== '' && counts[it.idx] > 0;
+    card.className = 'card' + (hasVal ? ' has-val' : '');
+    card.innerHTML = `
+      <div>
+        <div class="card-fam">${it.f}</div>
+        <div class="card-title">${it.p}</div>
+      </div>
+      <div class="card-controls">
+        <div class="btn-qty" onclick="changeQty(${it.idx}, -1)">−</div>
+        <input class="input-qty" type="number" data-idx="${it.idx}" value="${counts[it.idx]}" placeholder="0" oninput="onInputQty(event, ${it.idx})">
+        <div class="btn-qty" onclick="changeQty(${it.idx}, 1)">+</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  updateFooter();
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.innerText.toUpperCase().includes(tab));
+  });
+  render();
+}
+
+function changeQty(idx, delta) {
+  let val = parseFloat(counts[idx]) || 0;
+  val = Math.max(0, val + delta);
+  counts[idx] = val === 0 ? '' : val;
+  render();
+}
+
+function onInputQty(e, idx) {
+  const val = e.target.value;
+  counts[idx] = val === '' ? '' : Math.max(0, parseFloat(val));
+  updateFooter();
+}
+
+function updateFooter() {
+  let count = 0;
+  Object.values(counts).forEach(v => {
+    if (v !== '' && v > 0) count++;
+  });
+  document.getElementById('countedN').innerText = count;
+}
+
+document.getElementById('search').addEventListener('input', (e) => {
+  searchFilter = e.target.value;
+  render();
 });
 
-const counts = {};
-ITEMS.forEach((it,i)=> counts[i] = null);
-
-const DECIMAL_FAMS = new Set([
-  'VINO BLANCO','VINO ROSADO','VINO TINTO','VINO GENEROSO','CAVA',
-  'GIN','VODKA','RON','WHISKY','TEQUILA','BRANDY','VERMOUTH','LICOR'
-]);
-function stepFor(fam){ return DECIMAL_FAMS.has(fam) ? 0.1 : 1; }
-function roundQty(v, fam){
-  if(DECIMAL_FAMS.has(fam)) return Math.round(v * 10) / 10;
-  return Math.round(v);
-}
-function fmtQty(v, fam){
-  if(v === null || v === undefined || v === '') return '';
-  return DECIMAL_FAMS.has(fam) ? v.toFixed(1) : String(v);
+function copyData() {
+  let text = "PRODUCTO\tCANTIDAD\n";
+  ITEMS.forEach((it, i) => {
+    if (counts[i] !== '' && counts[i] > 0) {
+      text += `${it.p}\t${counts[i]}\n`;
+    }
+  });
+  navigator.clipboard.writeText(text).then(() => alert("Copiado al portapapeles"));
 }
 
-const SECTIONS = ['BEBIDAS','COCINA','MINIBAR'];
-const SECTION_ICON = {'BEBIDAS':'bottle','COCINA':'cup','MINIBAR':'box'};
-let activeSection = 'BEBIDAS';
-let searchTerm = '';
-
-const chipsEl = document.getElementById('chips');
-const listEl = document.getElementById('list');
-const searchEl = document.getElementById('search');
-const clearBtn = document.getElementById('clearSearch');
-const countedNEl = document.getElementById('countedN');
-const totalEurEl = document.getElementById('totalEur');
-const copyBtn = document.getElementById('copyBtn');
-const dateBadge = document.getElementById('dateBadge');
+function exportExcel() {
+  const data = [["Producto", "Familia", "Cantidad", "Precio", "Total"]];
+  ITEMS.forEach((it, i) => {
+    if (counts[i] !== '' && counts[i] > 0) {
+      data.push([it.p, it.f, counts[i], it.pr, counts[i] * it.pr]);
+    }
+  });
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+  XLSX.writeFile(wb, "Inventario_Son_Moli.xlsx");
+}
 
 (function initDate(){
   const d = new Date();
   const meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-  dateBadge.textContent = `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+  document.getElementById('dateBadge').textContent = `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
 })();
-
-function renderChips(){
-  chipsEl.innerHTML = '';
-  SECTIONS.forEach(s=>{
-    const chip = document.createElement('div');
-    chip.className = 'chip' + (s===activeSection && !searchTerm ? ' active' : '');
-    chip.innerHTML = ICONS[SECTION_ICON[s]] + `<span>${s}</span>`;
-    chip.onclick = ()=>{ activeSection = s; searchEl.value=''; searchTerm=''; clearBtn.style.display='none'; render(); };
-    chipsEl.appendChild(chip);
-  });
-}
-
-function fmtMoney(v){
-  return v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
-}
-
-function render(){
-  renderChips();
-  let filtered = ITEMS.map((it,i)=>({...it, idx:i}));
-  if(searchTerm){
-    const t = searchTerm.toLowerCase();
-    filtered = filtered.filter(it => it.p.toLowerCase().includes(t));
-  } else {
-    filtered = filtered.filter(it => it.s === activeSection);
-  }
-
-  listEl.innerHTML = '';
-  if(filtered.length === 0){
-    listEl.innerHTML = `<div class="empty">${ICONS.glass}<div>Sin resultados. Prueba con otra palabra.</div></div>`;
-    updateFooter();
-    return;
-  }
-
-  let lastFam = null;
-  filtered.forEach(it=>{
-    if(it.f !== lastFam){
-      lastFam = it.f;
-      const famItems = filtered.filter(x=>x.f===it.f && (searchTerm || x.s===activeSection));
-      const famDone = famItems.filter(x=>counts[x.idx]).length;
-      const color = FAM_COLORS[it.f];
-      const fh = document.createElement('div');
-      fh.className = 'fam-header';
-      fh.innerHTML = `
-        <div class="fam-icon" style="background:${color}22; color:${color};">${ICONS[FAM_ICON_KEY(it.f)]}</div>
-        <span class="fam-name">${it.f}</span>
-        <span class="fam-progress">${famDone}/${famItems.length}</span>
-      `;
-      listEl.appendChild(fh);
-    }
-    const row = document.createElement('div');
-    row.className = 'row' + (counts[it.idx] ? ' counted' : '');
-    const step = stepFor(it.f);
-    row.innerHTML = `
-      <div class="rname">${it.p}</div>
-      <div class="counter">
-        <div class="cbtn" data-act="minus" data-idx="${it.idx}">−</div>
-        <input class="cnum" type="number" step="${step}" inputmode="decimal" data-idx="${it.idx}" value="${fmtQty(counts[it.idx], it.f)}" placeholder="0">
-        <div class="cbtn" data-act="plus" data-idx="${it.idx}">+</div>
-      </div>
-    `;
-    listEl.appendChild(row);
-  });
-  updateFooter();
-}
-
-listEl.addEventListener('click', (e)=>{
-  const btn = e.target.closest('.cbtn');
-  if(!btn) return;
-  const idx = parseInt(btn.dataset.idx);
-  const fam = ITEMS[idx].f;
-  const step = stepFor(fam);
-  let cur = counts[idx] || 0;
-  cur = btn.dataset.act === 'plus' ? cur + step : Math.max(0, cur - step);
-  counts[idx] = roundQty(cur, fam);
-  render();
-});
-
-listEl.addEventListener('input', (e)=>{
-  if(!e.target.classList.contains('cnum')) return;
-  const idx = parseInt(e.target.dataset.idx);
-  const fam = ITEMS[idx].f;
-  const val = e.target.value;
-  counts[idx] = val === '' ? null : roundQty(parseFloat(val), fam);
-  const row = e.target.closest('.row');
-  if(row) row.classList.toggle('counted', !!counts[idx]);
-  updateFooter();
-});
-
-function bump(el){
-  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
-}
-
-function updateFooter(){
-  let n = 0, total = 0;
-  ITEMS.forEach((it,i)=>{
-    const q = counts[i];
-    if(q){ n++; total += q * (it.pr || 0); }
-  });
-  if(countedNEl.textContent !== String(n)) bump(countedNEl);
-  countedNEl.textContent = n;
-  totalEurEl.textContent = fmtMoney(total);
-}
-
-searchEl.addEventListener('input', (e)=>{
-  searchTerm = e.target.value;
-  clearBtn.style.display = searchTerm ? 'block' : 'none';
-  render();
-});
-clearBtn.addEventListener('click', ()=>{
-  searchEl.value=''; searchTerm=''; clearBtn.style.display='none'; render();
-});
-
-copyBtn.addEventListener('click', ()=>{
-  let lines = ['PRODUCTO\tFAMILIA\tUD\tVALOR'];
-  ITEMS.forEach((it,i)=>{
-    const q = counts[i];
-    if(q){ lines.push(`${it.p}\t${it.f}\t${fmtQty(q, it.f)}\t${(q*(it.pr||0)).toFixed(2)}`); }
-  });
-  const text = lines.join('\n');
-  const done = ()=>{
-    copyBtn.innerHTML = '✓ Copiado';
-    copyBtn.classList.add('copied');
-    setTimeout(()=>{ copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg> Copiar'; copyBtn.classList.remove('copied'); }, 1800);
-  };
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(text).then(done);
-  } else {
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    done();
-  }
-});
-
-const excelBtn = document.getElementById('excelBtn');
-const SECTION_SHEETNAME = {
-  'BEBIDAS': 'BEBIDAS (conteo rápido)',
-  'COCINA': 'COCINA (conteo rápido)',
-  'MINIBAR': 'MINIBAR (conteo rápido)'
-};
-
-function buildSheetAOA(sectionItems){
-  const aoa = [];
-  const merges = [];
-  let lastFam = null;
-  let prodStartRow = null;
-  let prodEndRow = null;
-  const subtotalRows = [];
-
-  function closeFamily(){
-    if(lastFam === null) return;
-    aoa.push([`SUBTOTAL ${lastFam}`, '', '', {f: `SUM(D${prodStartRow}:D${prodEndRow})`}]);
-    subtotalRows.push(aoa.length);
-    aoa.push([]);
-  }
-
-  sectionItems.forEach((it)=>{
-    if(it.f !== lastFam){
-      closeFamily();
-      aoa.push([it.f, '', '', '']);
-      merges.push({s:{r:aoa.length-1, c:0}, e:{r:aoa.length-1, c:3}});
-      aoa.push(['PRODUCTO','UD','PRECIO','VALOR TOTAL']);
-      lastFam = it.f;
-      prodStartRow = null;
-    }
-    const q = counts[it.idx];
-    const qVal = q ? q : '';
-    aoa.push([it.p, qVal, it.pr || 0, '']);
-    const thisRow = aoa.length;
-    if(qVal !== ''){
-      aoa[thisRow-1][3] = {f:`B${thisRow}*C${thisRow}`};
-    }
-    if(prodStartRow === null) prodStartRow = thisRow;
-    prodEndRow = thisRow;
-  });
-  closeFamily();
-
-  aoa.push([]);
-  aoa.push(['TOTAL', '', '', subtotalRows.length ? {f: subtotalRows.map(r=>`D${r}`).join('+')} : 0]);
-
-  return {aoa, merges};
-}
-
-excelBtn.addEventListener('click', ()=>{
-  const wb = XLSX.utils.book_new();
-  ['BEBIDAS','COCINA','MINIBAR'].forEach(sec=>{
-    const secItems = ITEMS.map((it,idx)=>({...it, idx})).filter(it => it.s === sec);
-    const {aoa, merges} = buildSheetAOA(secItems);
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!merges'] = merges;
-    ws['!cols'] = [{wch:42},{wch:10},{wch:10},{wch:12}];
-    XLSX.utils.book_append_sheet(wb, ws, SECTION_SHEETNAME[sec]);
-  });
-  const today = new Date();
-  const stamp = today.toISOString().slice(0,10);
-  XLSX.writeFile(wb, `Inventario contado ${stamp}.xlsx`);
-  excelBtn.innerHTML = '✓ Listo';
-  excelBtn.classList.add('done');
-  setTimeout(()=>{ excelBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M5 20h14"/></svg> Excel'; excelBtn.classList.remove('done'); }, 1800);
-});
 
 render();
 </script>
