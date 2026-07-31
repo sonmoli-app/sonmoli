@@ -46,23 +46,27 @@
 
   .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(43,42,34,0.12); border:1px solid rgba(43,42,34,0.12); margin-bottom:1.2rem;}
   .kpi{background:#fff; padding:0.8rem;}
-  .kpi .n{font-family:'Fraunces',serif; font-size:1.3rem;}
-  .kpi .l{font-size:0.58rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(43,42,34,0.5);}
+  .kpi .n{font-family:'Fraunces',serif; font-size:1.2rem;}
+  .kpi .l{font-size:0.55rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(43,42,34,0.5);}
 
-  .item{background:#fff; border:1px solid rgba(43,42,34,0.12); padding:0.9rem 1rem; display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem;}
+  .item{background:#fff; border:1px solid rgba(43,42,34,0.12); padding:0.9rem 1rem; display:flex; flex-direction:column; gap:0.6rem; margin-bottom:0.6rem;}
+  .item-row-top{display:flex; justify-content:space-between; align-items:flex-start; gap:0.8rem;}
   .item-main{flex:1; min-width:0;}
-  .item-name{font-size:0.92rem; font-weight:400;}
+  .item-name{font-size:0.92rem; font-weight:400; word-break:break-word;}
   .item-fam{font-size:0.62rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--sage); margin-top:0.15rem;}
-  .item-price{font-family:'IBM Plex Mono',monospace; font-size:0.85rem; color:var(--oil); cursor:pointer; border-bottom:1px dashed var(--oil); padding-bottom:1px;}
-  .item-price input{width:70px; font-family:'IBM Plex Mono',monospace; font-size:0.85rem; border:1px solid var(--oil); padding:0.2rem 0.3rem;}
-  .counter{display:flex; align-items:center; gap:0.5rem;}
-  .cbtn{width:30px; height:30px; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .cnum{width:34px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:0.9rem;}
-  .del-btn{background:none; border:none; color:var(--brick); font-size:1rem; cursor:pointer; padding:0.2rem 0.3rem;}
+  .item-price{font-family:'IBM Plex Mono',monospace; font-size:0.85rem; color:var(--oil); white-space:nowrap;}
+  
+  .item-row-controls{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; border-top:1px dashed rgba(43,42,34,0.08); padding-top:0.6rem;}
+  .counter-group{display:flex; gap:1rem; flex-wrap:wrap;}
+  .counter{display:flex; align-items:center; gap:0.4rem;}
+  .counter label{font-family:'IBM Plex Mono',monospace; font-size:0.62rem; text-transform:uppercase; color:rgba(43,42,34,0.5); margin-right:0.2rem;}
+  .cbtn{width:28px; height:28px; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:0.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .cnum{width:38px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:0.85rem; padding:0.2rem 0; border:1px solid rgba(43,42,34,0.15); background:#fafafa;}
+  .del-btn{background:none; border:none; color:var(--brick); font-size:0.9rem; cursor:pointer; padding:0.2rem 0.3rem; margin-left:auto;}
 
   .empty{text-align:center; padding:2.5rem 1rem; color:rgba(43,42,34,0.45); font-family:'IBM Plex Mono',monospace; font-size:0.78rem;}
 
-  footer{position:fixed; bottom:0; left:0; right:0; background:var(--olive-deep); padding:0.9rem 1.2rem; display:flex; gap:0.6rem; align-items:center; justify-content:space-between; z-index: 10;}
+  footer{position:fixed; bottom:0; left:0; right:0; background:var(--olive-deep); padding:0.9rem 1.2rem; display:flex; gap:0.6rem; align-items:center; justify-content:space-between; z-index:30;}
   footer .total{color:var(--paper); font-family:'Fraunces',serif; font-size:1.1rem;}
   footer .total .l{display:block; font-family:'IBM Plex Mono',monospace; font-size:0.58rem; text-transform:uppercase; color:rgba(244,239,224,0.5);}
   .footer-actions{display:flex; gap:0.5rem;}
@@ -75,13 +79,11 @@
   .sheet h2{font-size:1.2rem; margin-bottom:1rem;}
   .field{margin-bottom:0.9rem;}
   .field label{display:block; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:rgba(43,42,34,0.55); margin-bottom:0.3rem;}
-  .field input{width:100%; padding:0.6rem 0.7rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-size:0.9rem;}
+  .field input, .field select{width:100%; padding:0.6rem 0.7rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-size:0.9rem; font-family:inherit;}
   .save-bar{display:flex; gap:0.6rem; margin-top:1.2rem;}
   .btn{flex:1; padding:0.75rem; border:none; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; cursor:pointer;}
   .btn-primary{background:var(--olive); color:var(--paper);}
   .btn-ghost{background:transparent; border:1px solid rgba(43,42,34,0.25); color:var(--ink);}
-
-  .loading{padding:3rem 1rem; text-align:center; color:rgba(43,42,34,0.5); font-family:'IBM Plex Mono',monospace; font-size:0.8rem;}
 </style>
 </head>
 <body>
@@ -103,542 +105,51 @@
 </div>
 
 <div id="appRoot">
-<header>
-  <div>
-    <div class="eyebrow">Son Molí · Bar / Cocina</div>
-    <h1>Inventario</h1>
-    <div class="sync" id="syncStatus">Conectando…</div>
-  </div>
-  <button id="logoutBtn">Salir</button>
-</header>
-
-<main>
-  <div class="searchbar">
-    <input type="text" id="search" placeholder="Buscar producto...">
-    <button class="add-btn" id="openAddBtn">+ Añadir</button>
-  </div>
-
-  <div class="chips" id="chips"></div>
-
-  <div class="kpis">
-    <div class="kpi"><div class="n" id="kProductos">–</div><div class="l">Productos</div></div>
-    <div class="kpi"><div class="n" id="kUnidades">–</div><div class="l">Unidades contadas</div></div>
-    <div class="kpi"><div class="n" id="kValor">–</div><div class="l">Valor total</div></div>
-  </div>
-
-  <div id="itemsList"><div class="loading">Cargando inventario…</div></div>
-</main>
-
-<footer>
-  <div class="total"><span class="l">Valor inventario</span><span id="footTotal">0,00 €</span></div>
-  <div class="footer-actions">
-    <button class="fbtn" id="copyBtn">Copiar</button>
-    <button class="fbtn" id="excelBtn">Excel</button>
-  </div>
-</footer>
-</div>
-
-<div class="overlay" id="overlay">
-  <div class="sheet">
-    <h2>Nuevo producto</h2>
-    <div class="field"><label>Nombre</label><input type="text" id="newName" placeholder="Ej: Ron Barceló"></div>
-    <div class="field"><label>Familia</label><input type="text" id="newFam" placeholder="Ej: LICOR" list="famList"><datalist id="famList"></datalist></div>
-    <div class="field"><label>Precio (€)</label><input type="text" inputmode="decimal" id="newPrice" placeholder="0,00"></div>
-    <div class="save-bar">
-      <button class="btn btn-ghost" id="cancelAdd">Cancelar</button>
-      <button class="btn btn-primary" id="confirmAdd">Añadir</button>
+  <header>
+    <div>
+      <div class="eyebrow">Son Molí F&B</div>
+      <h1 id="appTitle">Carga Completa</h1>
+      <div class="sync" id="syncLabel">Guardado local activo</div>
     </div>
-  </div>
+    <button id="logoutBtn">Salir</button>
+  </header>
+
+  <main>
+    <div class="searchbar">
+      <input type="text" id="searchInp" placeholder="Buscar productos...">
+      <button class="add-btn" id="openAddBtn">+ Nuevo</button>
+    </div>
+
+    <div class="chips" id="familyChips"></div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="n mono" id="kpiItems">0</div>
+        <div class="l">Artículos</div>
+      </div>
+      <div class="kpi">
+        <div class="n mono" id="kpiUnits">0</div>
+        <div class="l">Unidades</div>
+      </div>
+      <div class="kpi">
+        <div class="n mono" id="kpiVal">0.00€</div>
+        <div class="l">Val. Total</div>
+      </div>
+    </div>
+
+    <div id="itemsContainer"></div>
+  </main>
+
+  <footer>
+    <div class="total">
+      <span class="l">Suma Global</span>
+      <span id="footerTotal">0.00 €</span>
+    </div>
+    <div class="footer-actions">
+      <button class="fbtn" id="resetBtn">Limpiar</button>
+      <button class="fbtn" style="background:var(--ochre); color:var(--ink); border-color:var(--ochre); font-weight:500;" id="exportBtn">Excel</button>
+    </div>
+  </footer>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-auth-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-firestore-compat.min.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDGaXka_ox82HoTQxeKcK4FMsu_9fH1RIE",
-    authDomain: "son-moli-sistemas.firebaseapp.com",
-    projectId: "son-moli-sistemas",
-    storageBucket: "son-moli-sistemas.firebasestorage.app",
-    messagingSenderId: "341368220861",
-    appId: "1:341368220861:web:ac47e37a7637926acbdbd4"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const itemsCol = db.collection('fyb_items');
-
-  let itemsData = [];
-  let currentFam = 'TODOS';
-  let searchTerm = '';
-
-  const initialProducts = [
-    { name: "00053027 WHISKY JACK DANIELS", fam: "WHISKY", price: 18.50 },
-    { name: "NESTEA CJ 24 UD", fam: "REFRESCO", price: 15.00 },
-    { name: "1080 COCA COLA LATA 33", fam: "REFRESCO", price: 16.20 },
-    { name: "PRD0000617 ALHAMBRA RESERVA 1925 33C", fam: "CERVEZA", price: 21.00 },
-    { name: "Agua con gas 50cl", fam: "BEBIDAS", price: 1.20 },
-    { name: "Agua sin gas 50cl", fam: "BEBIDAS", price: 1.20 },
-    { name: "Agua con gas 1L", fam: "BEBIDAS", price: 2.20 },
-    { name: "Agua sin gas 1L", fam: "BEBIDAS", price: 2.20 },
-    { name: "Coca-Cola 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Coca-Cola Zero 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Fanta Naranja 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Fanta Limón 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Sprite 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Nestea 33cl", fam: "REFRESCOS", price: 2.20 },
-    { name: "Aquarius Limón 33cl", fam: "REFRESCOS", price: 2.20 },
-    { name: "Aquarius Naranja 33cl", fam: "REFRESCOS", price: 2.20 },
-    { name: "Tónica Schweppes", fam: "REFRESCOS", price: 2.20 },
-    { name: "Bitter Kas", fam: "REFRESCOS", price: 2.20 },
-    { name: "Zumo de Piña", fam: "ZUMOS", price: 2.00 },
-    { name: "Zumo de Naranja", fam: "ZUMOS", price: 2.00 },
-    { name: "Zumo de Melocotón", fam: "ZUMOS", price: 2.00 },
-    { name: "Cerveza Cruzcampo 33cl", fam: "CERVEZAS", price: 2.20 },
-    { name: "Cerveza Heineken", fam: "CERVEZAS", price: 2.50 },
-    { name: "Cerveza 0,0", fam: "CERVEZAS", price: 2.20 },
-    { name: "Cerveza Radler", fam: "CERVEZAS", price: 2.20 },
-    { name: "Cerveza de Barril 1/2", fam: "CERVEZAS", price: 3.00 },
-    { name: "Cerveza de Barril Caña", fam: "CERVEZAS", price: 2.00 },
-    { name: "Vino Blanco Crianza 75cl", fam: "VINOS", price: 12.00 },
-    { name: "Vino Tinto Crianza 75cl", fam: "VINOS", price: 14.00 },
-    { name: "Vino Rosado 75cl", fam: "VINOS", price: 11.00 },
-    { name: "Vino de la Casa (Copa)", fam: "VINOS", price: 2.50 },
-    { name: "Cava Brut 75cl", fam: "CAVAS", price: 16.00 },
-    { name: "Champagne 75cl", fam: "CAVAS", price: 45.00 },
-    { name: "Vermut Rojo", fam: "APERITIVOS", price: 3.00 },
-    { name: "Vermut Blanco", fam: "APERITIVOS", price: 3.00 },
-    { name: "Gin Beefeater", fam: "LICORES", price: 6.00 },
-    { name: "Gin Bombay Sapphire", fam: "LICORES", price: 7.50 },
-    { name: "Gin Hendrick's", fam: "LICORES", price: 9.00 },
-    { name: "Ron Barceló", fam: "LICORES", price: 6.00 },
-    { name: "Ron Brugal", fam: "LICORES", price: 6.00 },
-    { name: "Ron Havana 7", fam: "LICORES", price: 8.00 },
-    { name: "Whisky J&B", fam: "LICORES", price: 6.00 },
-    { name: "Whisky Jack Daniel's", fam: "LICORES", price: 7.50 },
-    { name: "Whisky Glenfiddich", fam: "LICORES", price: 9.50 },
-    { name: "Vodka Smirnoff", fam: "LICORES", price: 6.00 },
-    { name: "Vodka Absolut", fam: "LICORES", price: 7.50 },
-    { name: "Tequila Jose Cuervo", fam: "LICORES", price: 5.50 },
-    { name: "Brandy Cardenal Mendoza", fam: "LICORES", price: 7.00 },
-    { name: "Licor de Hierbas", fam: "LICORES", price: 4.50 },
-    { name: "Pacharán", fam: "LICORES", price: 4.50 },
-    { name: "Limoncello", fam: "LICORES", price: 4.50 },
-    { name: "Café Solo", fam: "CAFETERIA", price: 1.40 },
-    { name: "Café Cortado", fam: "CAFETERIA", price: 1.50 },
-    { name: "Café con Leche", fam: "CAFETERIA", price: 1.60 },
-    { name: "Café Americano", fam: "CAFETERIA", price: 1.50 },
-    { name: "Descafeinado de Sobrecito", fam: "CAFETERIA", price: 1.40 },
-    { name: "Descafeinado de Máquina", fam: "CAFETERIA", price: 1.60 },
-    { name: "Infusión Manzanilla", fam: "CAFETERIA", price: 1.50 },
-    { name: "Infusión Té Verde", fam: "CAFETERIA", price: 1.50 },
-    { name: "Infusión Té Negro", fam: "CAFETERIA", price: 1.50 },
-    { name: "Infusión Rooibos", fam: "CAFETERIA", price: 1.50 },
-    { name: "Leche Sin Lactosa", fam: "CAFETERIA", price: 0.30 },
-    { name: "Leche de Avena", fam: "CAFETERIA", price: 0.40 },
-    { name: "Azúcar Blanco (Caja)", fam: "CAFETERIA", price: 3.00 },
-    { name: "Azúcar Moreno (Caja)", fam: "CAFETERIA", price: 3.50 },
-    { name: "Ssacarina (Caja)", fam: "CAFETERIA", price: 3.00 },
-    { name: "Pan Rústico (Unidad)", fam: "COCINA", price: 0.80 },
-    { name: "Pan Integral (Unidad)", fam: "COCINA", price: 0.90 },
-    { name: "Pan Bimbo (Molde)", fam: "COCINA", price: 2.20 },
-    { name: "Aceite de Oliva Virgen Extra (L)", fam: "COCINA", price: 8.50 },
-    { name: "Vinagre de Jerez (L)", fam: "COCINA", price: 4.00 },
-    { name: "Sal Fina (Kg)", fam: "COCINA", price: 0.90 },
-    { name: "Sal Maldon (Caja)", fam: "COCINA", price: 5.00 },
-    { name: "Pimienta Negra Molida", fam: "COCINA", price: 2.50 },
-    { name: "Huevos Camperos (Docena)", fam: "COCINA", price: 3.20 },
-    { name: "Mantequilla (Caja 100u)", fam: "COCINA", price: 12.00 },
-    { name: "Mermelada Fresa (Bote)", fam: "COCINA", price: 2.80 },
-    { name: "Mermelada Melocotón (Bote)", fam: "COCINA", price: 2.80 },
-    { name: "Tomate Triturado (Lata 5kg)", fam: "COCINA", price: 9.00 },
-    { name: "Queso Manchego Curado (Kg)", fam: "COCINA", price: 18.00 },
-    { name: "Queso Tierno (Kg)", fam: "COCINA", price: 11.00 },
-    { name: "Jamón Serrano (Kg)", fam: "COCINA", price: 22.00 },
-    { name: "Jamón Ibérico (Kg)", fam: "COCINA", price: 65.00 },
-    { name: "Pechuga de Pavo (Kg)", fam: "COCINA", price: 9.50 },
-    { name: "Bacon Ahumado (Kg)", fam: "COCINA", price: 8.50 },
-    { name: "Chorizo Cular (Kg)", fam: "COCINA", price: 10.00 },
-    { name: "Salchichón Extra (Kg)", fam: "COCINA", price: 10.00 },
-    { name: "Atún en Aceite (Lata Grande)", fam: "COCINA", price: 14.00 },
-    { name: "Anchoas en Aceite (Lata)", fam: "COCINA", price: 12.50 },
-    { name: "Aceitunas Rellenas (Lata)", fam: "COCINA", price: 5.50 },
-    { name: "Patatas Fritas de Bolsa (Pack)", fam: "COCINA", price: 4.50 },
-    { name: "Frutos Secos Variados (Bol)", fam: "COCINA", price: 6.00 },
-    { name: "Harina de Trigo (Kg)", fam: "COCINA", price: 1.10 },
-    { name: "Arroz Redondo (Kg)", fam: "COCINA", price: 1.60 },
-    { name: "Pasta Spaghetti (Kg)", fam: "COCINA", price: 1.50 },
-    { name: "Pasta Macarrones (Kg)", fam: "COCINA", price: 1.50 },
-    { name: "Nata Líquida para Cocinar (L)", fam: "COCINA", price: 4.20 },
-    { name: "Leche Entera (L)", fam: "COCINA", price: 1.10 },
-    { name: "Leche Semidesnatada (L)", fam: "COCINA", price: 1.10 },
-    { name: "Ajos (Kg)", fam: "COCINA", price: 3.50 },
-    { name: "Cebollas (Kg)", fam: "COCINA", price: 1.50 },
-    { name: "Patatas (Kg)", fam: "COCINA", price: 1.30 },
-    { name: "Tomates de Ensalada (Kg)", fam: "COCINA", price: 2.20 },
-    { name: "Lechuga Iceberg (Unidad)", fam: "COCINA", price: 1.10 },
-    { name: "Limones (Kg)", fam: "COCINA", price: 2.00 },
-    { name: "Naranjas para Zumo (Kg)", fam: "COCINA", price: 1.80 },
-    { name: "Plátanos (Kg)", fam: "COCINA", price: 2.40 },
-    { name: "Manzanas Golden (Kg)", fam: "COCINA", price: 2.30 },
-    { name: "Servilletas de Papel (Paquete)", fam: "LIMPIEZA", price: 2.50 },
-    { name: "Papel Higiénico (Pack 12)", fam: "LIMPIEZA", price: 5.50 },
-    { name: "Papel Secamanos (Bobina)", fam: "LIMPIEZA", price: 3.80 },
-    { name: "Detergente Lavavajillas (L)", fam: "LIMPIEZA", price: 6.50 },
-    { name: "Brillo Lavavajillas (L)", fam: "LIMPIEZA", price: 5.00 },
-    { name: "Desengrasante Cocina (L)", fam: "LIMPIEZA", price: 4.80 },
-    { name: "Lejía Concentrada (L)", fam: "LIMPIEZA", price: 1.80 },
-    { name: "Limpiador Multiusos (L)", fam: "LIMPIEZA", price: 2.20 },
-    { name: "Bolsas de Basura Grandes (Pack)", fam: "LIMPIEZA", price: 3.50 },
-    { name: "Estropajos Verdes (Pack)", fam: "LIMPIEZA", price: 1.50 },
-    { name: "Bayetas Microfibra (Pack)", fam: "LIMPIEZA", price: 3.00 },
-    { name: "Guantes de Látex (Caja)", fam: "LIMPIEZA", price: 7.50 },
-    { name: "Pastillas Encendido Barbacoa", fam: "EXTRAS", price: 2.50 },
-    { name: "Carbón Vegetal (Saco 3kg)", fam: "EXTRAS", price: 6.50 },
-    { name: "Velas Pequeñas (Pack 50)", fam: "EXTRAS", price: 8.00 },
-    { name: "Palillos (Caja)", fam: "EXTRAS", price: 1.20 },
-    { name: "Bolsas de Papel Asesoras (Pack)", fam: "EXTRAS", price: 5.00 },
-    { name: "Film Transparente (Rollo Grande)", fam: "EXTRAS", price: 9.50 },
-    { name: "Papel de Aluminio (Rollo Grande)", fam: "EXTRAS", price: 11.00 },
-    { name: "Recipientes Herméticos (Pack)", fam: "EXTRAS", price: 14.00 },
-    { name: "Bandejas Desechables (Pack)", fam: "EXTRAS", price: 6.00 },
-    { name: "Vasos de Tubo Desechables (Pack)", fam: "EXTRAS", price: 4.50 },
-    { name: "Cañitas de Papel (Pack)", fam: "EXTRAS", price: 2.50 },
-    { name: "Cinta Adhesiva Embalaje", fam: "EXTRAS", price: 2.00 },
-    { name: "Rotuladores Permanentes (Pack)", fam: "EXTRAS", price: 4.00 },
-    { name: "Bloc de Notas Comandas", fam: "EXTRAS", price: 3.00 },
-    { name: "Bolígrafos Azules (Pack 10)", fam: "EXTRAS", price: 3.50 },
-    { name: "Cucharas Postre Inox (Docena)", fam: "EXTRAS", price: 8.00 },
-    { name: "Tenedores Inox (Docena)", fam: "EXTRAS", price: 9.00 },
-    { name: "Cuchillos Inox (Docena)", fam: "EXTRAS", price: 9.00 },
-    { name: "Cucharas Soperas (Docena)", fam: "EXTRAS", price: 9.00 },
-    { name: "Vasos de Agua Vidrio (Docena)", fam: "EXTRAS", price: 12.00 },
-    { name: "Copas de Vino (Docena)", fam: "EXTRAS", price: 18.00 },
-    { name: "Copas de Cava (Docena)", fam: "EXTRAS", price: 20.00 },
-    { name: "Tazas de Café con Plato (Docena)", fam: "EXTRAS", price: 15.00 },
-    { name: "Jarras de Vidrio 1L (Unidad)", fam: "EXTRAS", price: 4.50 },
-    { name: "Ceniceros de Terraza (Unidad)", fam: "EXTRAS", price: 2.50 },
-    { name: "Manteles de Papel (Pack)", fam: "EXTRAS", price: 7.00 },
-    { name: "Cubre manteles (Pack)", fam: "EXTRAS", price: 9.00 },
-    { name: "Gel Hidroalcohólico (L)", fam: "EXTRAS", price: 5.50 },
-    { name: "Mascarillas Quirúrgicas (Caja)", fam: "EXTRAS", price: 6.00 },
-    { name: "Pilas AA (Pack 4)", fam: "EXTRAS", price: 3.50 },
-    { name: "Pilas AAA (Pack 4)", fam: "EXTRAS", price: 3.50 },
-    { name: "Bombillas LED E27 (Unidad)", fam: "EXTRAS", price: 3.00 },
-    { name: "Bombillas LED E14 (Unidad)", fam: "EXTRAS", price: 3.00 },
-    { name: "Cinta Aislante", fam: "EXTRAS", price: 1.50 },
-    { name: "Bridas de Plástico (Pack)", fam: "EXTRAS", price: 2.50 },
-    { name: "Mechones de Encendido (Pack)", fam: "EXTRAS", price: 2.00 },
-    { name: "Encendedores de Cocina", fam: "EXTRAS", price: 1.80 },
-    { name: "Sacos de Yute Decorativos", fam: "EXTRAS", price: 5.00 },
-    { name: "Cestas de Pan Mimbre", fam: "EXTRAS", price: 6.50 },
-    { name: "Bandejas Antideslizantes (Unidad)", fam: "EXTRAS", price: 14.00 },
-    { name: "Cubiteras de Hielo (Unidad)", fam: "EXTRAS", price: 8.50 },
-    { name: "Pinzas de Hielo Inox", fam: "EXTRAS", price: 3.50 },
-    { name: "Coladores de Barra", fam: "EXTRAS", price: 4.50 },
-    { name: "Morteros de Madera", fam: "EXTRAS", price: 7.00 },
-    { name: "Tablas de Corte Polietileno", fam: "EXTRAS", price: 12.00 },
-    { name: "Cuchillos de Cocina Chef", fam: "EXTRAS", price: 19.00 },
-    { name: "Afilador de Cuchillos", fam: "EXTRAS", price: 15.00 },
-    { name: "Tijeras de Cocina Inox", fam: "EXTRAS", price: 5.50 },
-    { name: "Espátulas de Silicona", fam: "EXTRAS", price: 3.50 },
-    { name: "Cucharones de Sopa Inox", fam: "EXTRAS", price: 4.50 },
-    { name: "Espumaderas Inox", fam: "EXTRAS", price: 4.50 },
-    { name: "Batidoras de Varilla Manuales", fam: "EXTRAS", price: 6.00 },
-    { name: "Sartenes Antiadherentes 28cm", fam: "EXTRAS", price: 24.00 },
-    { name: "Ollas de Acero Inoxidable", fam: "EXTRAS", price: 38.00 },
-    { name: "Cacerolas con Tapa", fam: "EXTRAS", price: 29.00 },
-    { name: "Bandejas de Horno Inox", fam: "EXTRAS", price: 18.00 },
-    { name: "Rejillas Enfriadoras Repostería", fam: "EXTRAS", price: 8.00 },
-    { name: "Mangas Pasteleras Desechables", fam: "EXTRAS", price: 5.00 },
-    { name: "Boquillas para Manga Pastelera", fam: "EXTRAS", price: 7.00 },
-    { name: "Moldes de Silicona Repostería", fam: "EXTRAS", price: 9.50 },
-    { name: "Ralladores de Queso Manuales", fam: "EXTRAS", price: 4.50 },
-    { name: "Abrelatas de Mano Profesional", fam: "EXTRAS", price: 7.50 },
-    { name: "Descorchadores de Sommelier", fam: "EXTRAS", price: 4.00 },
-    { name: "Sacacorchos de Pared", fam: "EXTRAS", price: 25.00 },
-    { name: "Dosificadores de Licor", fam: "EXTRAS", price: 1.50 },
-    { name: "Bascula Digital de Cocina", fam: "EXTRAS", price: 22.00 },
-    { name: "Termómetro Digital de Pincho", fam: "EXTRAS", price: 14.00 },
-    { name: "Temporizadores de Cocina Digitales", fam: "EXTRAS", price: 6.00 },
-    { name: "Guantes Térmicos de Horno", fam: "EXTRAS", price: 9.00 },
-    { name: "Delantales con Peto (Unidad)", fam: "EXTRAS", price: 8.50 },
-    { name: "Gorros de Cocina Desechables", fam: "EXTRAS", price: 4.00 },
-    { name: "Casacas de Cocina Blancas", fam: "EXTRAS", price: 19.00 },
-    { name: "Pantalones de Cocina", fam: "EXTRAS", price: 16.00 },
-    { name: "Zapatos Antideslizantes Hostelería", fam: "EXTRAS", price: 35.00 },
-    { name: "Paños de Cocina de Algodón", fam: "EXTRAS", price: 2.50 },
-    { name: "Alfombras Antifatiga Suelo", fam: "EXTRAS", price: 42.00 },
-    { name: "Carteles de Suelo Mojado", fam: "EXTRAS", price: 12.00 },
-    { name: "Señalización Salida Emergencia", fam: "EXTRAS", price: 9.00 },
-    { name: "Extintores de Co2 / Polvo", fam: "EXTRAS", price: 65.00 },
-    { name: "Botiquín de Primeros Auxilios", fam: "EXTRAS", price: 28.00 },
-    { name: "Linternas de Emergencia LED", fam: "EXTRAS", price: 15.00 },
-    { name: "Pilas Recargables AA", fam: "EXTRAS", price: 8.00 },
-    { name: "Cargador de Pilas Universal", fam: "EXTRAS", price: 18.00 },
-    { name: "Regletas de Enchufe con Interruptor", fam: "EXTRAS", price: 9.50 },
-    { name: "Adaptadores de Enchufe Internacional", fam: "EXTRAS", price: 5.00 },
-    { name: "Cables HDMI 2m", fam: "EXTRAS", price: 6.00 },
-    { name: "Cables de Red Ethernet 5m", fam: "EXTRAS", price: 7.00 },
-    { name: "Router Wi-Fi Repetidor", fam: "EXTRAS", price: 32.00 },
-    { name: "Terminales de Cobro Datáfono", fam: "EXTRAS", price: 120.00 },
-    { name: "Rollos de Papel Datáfono (Pack 10)", fam: "EXTRAS", price: 6.50 },
-    { name: "Impresora de Comandas Térmica", fam: "EXTRAS", price: 145.00 },
-    { name: "Rollos de Papel Comandas (Pack 10)", fam: "EXTRAS", price: 7.50 },
-    { name: "Cajón Portamonedas Automático", fam: "EXTRAS", price: 65.00 },
-    { name: "Lupas de Lectura de Cartas", fam: "EXTRAS", price: 4.50 },
-    { name: "Soportes de Carta de Mesa", fam: "EXTRAS", price: 3.50 },
-    { name: "Pizarras de Menú Pequeñas", fam: "EXTRAS", price: 12.00 },
-    { name: "Tizas Blancas y de Colores (Box)", fam: "EXTRAS", price: 3.50 },
-    { name: "Borradores para Pizarra", fam: "EXTRAS", price: 2.50 },
-    { name: "Rotuladores para Pizarra Blanca", fam: "EXTRAS", price: 5.00 },
-    { name: "Expositores de Folletos de Mesa", fam: "EXTRAS", price: 6.00 },
-    { name: "Tarjetas de Reservado de Mesa", fam: "EXTRAS", price: 2.00 },
-    { name: "Banderas Publicitarias Exterior", fam: "EXTRAS", price: 45.00 },
-    { name: "Parasoles Grandes de Terraza", fam: "EXTRAS", price: 180.00 },
-    { name: "Fundas Protectoras de Parasol", fam: "EXTRAS", price: 22.00 },
-    { name: "Estufas de Terraza a Gas", fam: "EXTRAS", price: 160.00 },
-    { name: "Bombonas de Butano / Propano", fam: "EXTRAS", price: 18.50 },
-    { name: "Mantas de Terraza para Clientes", fam: "EXTRAS", price: 14.00 },
-    { name: "Cestas para Ropa Sucia", fam: "EXTRAS", price: 18.00 },
-    { name: "Perchas de Madera para Armario", fam: "EXTRAS", price: 1.50 },
-    { name: "Carteles Prohibido Fumar", fam: "EXTRAS", price: 3.00 },
-    { name: "Papeleras de Baño con Pedal", fam: "EXTRAS", price: 12.00 },
-    { name: "Dispensadores de Jabón de Manos", fam: "EXTRAS", price: 14.00 },
-    { name: "Jabón de Manos Líquido (L)", fam: "EXTRAS", price: 3.50 },
-    { name: "Ambientador de Espacios (Spray)", fam: "EXTRAS", price: 4.50 },
-    { name: "Recambios Ambientador Automático", fam: "EXTRAS", price: 5.50 }
-  ];
-
-  // Auth Handlers
-  document.getElementById('loginBtn').addEventListener('click', doLogin);
-  document.getElementById('togglePass').addEventListener('click', ()=>{
-    const p = document.getElementById('loginPass');
-    const btn = document.getElementById('togglePass');
-    if(p.type==='password'){ p.type='text'; btn.textContent='OCULTAR'; }
-    else { p.type='password'; btn.textContent='VER'; }
-  });
-  document.getElementById('loginPass').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
-
-  function doLogin(){
-    let username = document.getElementById('loginEmail').value.trim().toLowerCase();
-    const pass = document.getElementById('loginPass').value;
-    document.getElementById('loginError').textContent = '';
-    const email = username.includes('@') ? username : `${username}@sonmoli.local`;
-    auth.signInWithEmailAndPassword(email, pass).catch(err=>{
-      document.getElementById('loginError').textContent = 'Usuario o contraseña incorrectos.';
-    });
-  }
-
-  document.getElementById('logoutBtn').addEventListener('click', ()=> auth.signOut());
-
-  auth.onAuthStateChanged((user)=>{
-    if(user){
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appRoot').style.display = 'block';
-      initInventoryListener();
-    } else {
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('appRoot').style.display = 'none';
-    }
-  });
-
-  // Firestore Realtime Listener
-  function initInventoryListener(){
-    document.getElementById('syncStatus').textContent = 'Conectando…';
-    itemsCol.onSnapshot((snapshot)=>{
-      if (snapshot.empty) {
-        const batch = db.batch();
-        initialProducts.forEach(prod => {
-          const docRef = itemsCol.doc();
-          batch.set(docRef, {
-            name: prod.name,
-            fam: prod.fam,
-            price: prod.price,
-            qty: 0,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        });
-        batch.commit().catch(err => console.error("Error al inicializar productos: ", err));
-        return;
-      }
-
-      itemsData = [];
-      snapshot.forEach(doc => {
-        itemsData.push({ id: doc.id, ...doc.data() });
-      });
-      document.getElementById('syncStatus').textContent = 'Conectado · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-      renderApp();
-    }, (err)=>{
-      document.getElementById('syncStatus').textContent = 'Error de conexión: ' + err.message;
-    });
-  }
-
-  function renderApp(){
-    renderChips();
-    renderItems();
-    updateKPIs();
-  }
-
-  function getFamilies(){
-    const fams = new Set(itemsData.map(i => i.fam || 'GENERAL'));
-    return ['TODOS', ...Array.from(fams).sort()];
-  }
-
-  function renderChips(){
-    const container = document.getElementById('chips');
-    container.innerHTML = '';
-    const fams = getFamilies();
-    
-    const datalist = document.getElementById('famList');
-    datalist.innerHTML = fams.filter(f=>f!=='TODOS').map(f => `<option value="${f}">`).join('');
-
-    fams.forEach(f => {
-      const chip = document.createElement('button');
-      chip.className = `chip ${f === currentFam ? 'active' : ''}`;
-      chip.textContent = f;
-      chip.addEventListener('click', ()=>{
-        currentFam = f;
-        renderApp();
-      });
-      container.appendChild(chip);
-    });
-  }
-
-  function renderItems(){
-    const list = document.getElementById('itemsList');
-    list.innerHTML = '';
-
-    const filtered = itemsData.filter(i => {
-      const matchFam = currentFam === 'TODOS' || i.fam === currentFam;
-      const matchSearch = (i.name || '').toLowerCase().includes(searchTerm.toLowerCase());
-      return matchFam && matchSearch;
-    });
-
-    if(filtered.length === 0){
-      list.innerHTML = '<div class="empty">No se encontraron productos</div>';
-      return;
-    }
-
-    filtered.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'item';
-      const qty = item.qty || 0;
-      const price = item.price || 0;
-
-      el.innerHTML = `
-        <div class="item-main">
-          <div class="item-name">${item.name}</div>
-          <div class="item-fam">${item.fam || 'GENERAL'}</div>
-        </div>
-        <div class="item-price" title="Click para editar precio">${price.toFixed(2)} €</div>
-        <div class="counter">
-          <button class="cbtn btn-minus">-</button>
-          <span class="cnum">${qty}</span>
-          <button class="cbtn btn-plus">+</button>
-        </div>
-        <button class="del-btn" title="Eliminar">✕</button>
-      `;
-
-      el.querySelector('.btn-minus').addEventListener('click', () => updateQty(item.id, Math.max(0, qty - 1)));
-      el.querySelector('.btn-plus').addEventListener('click', () => updateQty(item.id, qty + 1));
-      el.querySelector('.del-btn').addEventListener('click', () => deleteItem(item.id));
-      
-      const priceEl = el.querySelector('.item-price');
-      priceEl.addEventListener('click', () => editPrice(item, priceEl));
-
-      list.appendChild(el);
-    });
-  }
-
-  function updateQty(id, newQty){
-    itemsCol.doc(id).update({ qty: newQty });
-  }
-
-  function deleteItem(id){
-    if(confirm('¿Seguro que deseas eliminar este producto?')){
-      itemsCol.doc(id).delete();
-    }
-  }
-
-  function editPrice(item, element){
-    const currentPrice = item.price || 0;
-    element.innerHTML = `<input type="number" step="0.01" value="${currentPrice}">`;
-    const input = element.querySelector('input');
-    input.focus();
-    
-    const save = () => {
-      const newPrice = parseFloat(input.value.replace(',', '.')) || 0;
-      itemsCol.doc(item.id).update({ price: newPrice });
-    };
-
-    input.addEventListener('blur', save);
-    input.addEventListener('keydown', (e) => { if(e.key === 'Enter') save(); });
-  }
-
-  function updateKPIs(){
-    const totalProds = itemsData.length;
-    const totalUnits = itemsData.reduce((acc, i) => acc + (i.qty || 0), 0);
-    const totalVal = itemsData.reduce((acc, i) => acc + ((i.qty || 0) * (i.price || 0)), 0);
-
-    document.getElementById('kProductos').textContent = totalProds;
-    document.getElementById('kUnidades').textContent = totalUnits;
-    document.getElementById('kValor').textContent = totalVal.toFixed(2) + ' €';
-    document.getElementById('footTotal').textContent = totalVal.toFixed(2) + ' €';
-  }
-
-  document.getElementById('search').addEventListener('input', (e)=>{
-    searchTerm = e.target.value;
-    renderItems();
-  });
-
-  const overlay = document.getElementById('overlay');
-  document.getElementById('openAddBtn').addEventListener('click', () => overlay.classList.add('open'));
-  document.getElementById('cancelAdd').addEventListener('click', () => overlay.classList.remove('open'));
-
-  document.getElementById('confirmAdd').addEventListener('click', () => {
-    const name = document.getElementById('newName').value.trim();
-    const fam = document.getElementById('newFam').value.trim().toUpperCase() || 'GENERAL';
-    const price = parseFloat(document.getElementById('newPrice').value.replace(',', '.')) || 0;
-
-    if(!name){ alert('Ingresa un nombre de producto'); return; }
-
-    itemsCol.add({
-      name: name,
-      fam: fam,
-      price: price,
-      qty: 0,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      document.getElementById('newName').value = '';
-      document.getElementById('newFam').value = '';
-      document.getElementById('newPrice').value = '';
-      overlay.classList.remove('open');
-    });
-  });
-
-  document.getElementById('excelBtn').addEventListener('click', ()=>{
-    const data = itemsData.map(i => ({
-      Familia: i.fam || 'GENERAL',
-      Producto: i.name,
-      Precio: i.price || 0,
-      Unidades: i.qty || 0,
-      'Valor Total': ((i.qty || 0) * (i.price || 0)).toFixed(2)
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-    XLSX.writeFile(wb, `Inventario_SonMoli_${new Date().toISOString().slice(0,10)}.xlsx`);
-  });
-
-  document.getElementById('copyBtn').addEventListener('click', ()=>{
-    let text = "INVENTARIO F&B - SON MOLÍ\n\n";
-    itemsData.filter(i => (i.qty || 0) > 0).forEach(i => {
-      text += `${i.name} (${i.fam}): ${i.qty} ud. x ${i.price}€ = ${((i.qty||0)*(i.price||0)).toFixed(2)}€\n`;
-    });
-    navigator.clipboard.writeText(text).then(() => alert('Resumen de cantidades copiadas al portapapeles.'));
-  });
-</script>
-</body>
-</html>
+<div class="overlay" id="addOverlay">
