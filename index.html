@@ -1,265 +1,1032 @@
-# Verify that DEFAULT_CATALOG array has 257 items in the code
-import re
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión y Control de Escandallos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- XLSX Library for Excel Import/Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: 600; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+            .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
+            .border { border-color: #e5e7eb !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
 
-# Let's count items in DEFAULT_CATALOG in code snippet
-catalog_items = [
-    ("110450, ROSA BLANCA 1/3 RET C/24 UN", "CERVEZA", 1.52),
-    ("0RF0296, RED BULL ENERGY DRINK 25 CL LATA 24U", "ZUMO", 1.12),
-    ("0ZU0048, PAGO PIÑA 20CL 24U", "ZUMO", 1.28),
-    ("0ZU0049, PAGO MELOCOTON 20CL 24U", "ZUMO", 1.28),
-    ("0ZU0221, PAGO PIÑA 1L PET 6U", "ZUMO", 3.01),
-    ("0ZU0225, PAGO  ARANDANOS 20CL 12 U", "ZUMO", 1.625),
-    ("0ZU0230, PAGO ZUMO DE MANZANA 20CL 12 U", "ZUMO", 2.52),
-    ("54492974  ZUMO MINUTE MAID NARANJA", "ZUMO", 0.61),
-    ("40822716  ZUMO MINUTE MAID MELOCOTON", "ZUMO", 0.61),
-    ("54491090  ZUMO MINUTE MAID PIÑA", "ZUMO", 0.61),
-    ("54007567  ZUMO MINUTE MAID NARANJA", "ZUMO", 0.61),
-    ("54492982  ZUMO MINUTE MAID TOMATE", "ZUMO", 0.61),
-    ("54499267  ZUMO MINUTE MAID MANZANA", "ZUMO", 0.61),
-    ("CJ13, CAJA DAMM BOT 1/3RET P PLAS", "CERVEZA", 1.47),
-    ("EC13, DAURA DAMM 1/3 RET. CAJ.", "CERVEZA", 1.507),
-    ("ED13 ESTRELLA DAMM 1/3RET.pp", "CERVEZA", 1.4),
-    ("MJ12, AGUA FONT MAJOR 1/2 RET CJ", "AGUA", 0.27),
-    ("MJG12, AGUA FONT MAJOR 1/2 GAS  RET", "AGUA", 0.312),
-    ("524, FANTA NARANJA VR237 C24", "REFRESCO", 0.63),
-    ("534, FANTA LIM VR237 C24", "REFRESCO", 0.63),
-    ("544, COCA COLA VR237 C24 UN", "REFRESCO", 0.74),
-    ("2548, SPRITE VR20 C24 UN", "REFRESCO", 0.58),
-    ("3919, RBLISS SODA VNR20 C24", "REFRESCO", 0.87),
-    ("FT115B24 FEVER TREE TONIC", "REFRESCO", 1.39),
-    ("FTP15B24 FEVER TREE GRAPEFRUIT", "REFRESCO", 1.42),
-    ("00048013, GIN HENDRICK'S 70 CL", "GIN", 25.35),
-    ("00048018, GIN TANQUERAY TEN  LITRO", "GIN", 25.25),
-    ("4417, FUZE LIMON VR30 C24", "REFRESCO", 0.74),
-    ("3901-1, RBLISS TON WTR VR20 C24", "REFRESCO", 0.92),
-    ("544 -2, COCA COLA ZERO VR237 C24  UN", "REFRESCO", 0.706),
-    ("1080 COCA COLA LATA 33 C24", "REFRESCO", 1.61),
-    ("00026060 CAVA ARS COLLECTA BLANC DE BLANCS 3/4", "CAVA", 15.02),
-    ("00754, CORIMBO 2019", "VINO TINTO", 18.71),
-    ("01148, TAITTINGER BRUT RESERVE", "GENERAL", 46.96),
-    ("032019, CAN MAJORCAL BUTIBALAUSI BLANC 2022", "GENERAL", 7.81),
-    ("3076FRANZISKANER WEISSBIER", "CERVEZA", 1.73),
-    ("3074FRANZISKANER WEISSBIER 00", "GENERAL", 1.7),
-    ("6435, ALHAMBRA RESERVA 1925 33CL", "GENERAL", 1.87),
-    ("0002598, ENVASES MAHOU VIDRIO RET 33CL", "GENERAL", 0.07),
-    ("PRD0000617 ALHAMBRA RESERVA 1925 VIDRIO NR 33CL CAJA 24U", "GENERAL", 1.18),
-    ("PRD0005393, MAHOU 0/0 TOSTADA 33 CL 24 U.", "GENERAL", 1.03),
-    ("00059136, HERBES DOLCES -MOYA 1L", "GENERAL", 8.04),
-    ("00059185, HERBES SEQUES - MOYA 1L", "GENERAL", 9.54),
-    ("00059164, HERBES MESCLADES - MOYA 70CL", "GENERAL", 8.55),
-    ("00050125, RON BRUGAL 1888 70 CL", "GENERAL", 35.31),
-    ("00030035 ANIS SECO TRES CAIRES 70 CL", "GENERAL", 14.22),
-    ("157096, AMARO RAMAZZOTI 0.70", "GENERAL", 12.83),
-    ("157146, AMARO MONTENEGRO 0,700", "GENERAL", 11.4),
-    ("163162, TEQUILA PATRON SILVER 70 CL", "GENERAL", 39.13),
-    ("163164, TEQUILA PATRON AÑEJO 70 CL", "GENERAL", 60.91),
-    ("00058006 TEQUILA PATRON REPOSADO 70 CL", "GENERAL", 45.11),
-    ("00058009TEQUILAREPOSADO", "GENERAL", 13.48),
-    ("000058011TEQUILA SILVER CUERVO BLANCO", "GENERAL", 12.58),
-    ("165008, AMARETTO DI SARONNO 70 CL", "LICOR", 13.44),
-    ("00050125 , RON ZACAPA 23 AÑOS 70 CL", "RON", 44.66),
-    ("200238, GIN MARE 70 CL", "GIN", 29.3),
-    ("59249 MALIBU", "GENERAL", 10.59),
-    ("59343PASSOA", "GENERAL", 9.99),
-    ("59366TIA MARIA", "GENERAL", 13.22),
-    ("62000FRANGELICO", "GENERAL", 12.04),
-    ("191003CAVA JUVE DE CAMPSESSENTIAL PURPURA", "GENERAL", 7.0),
-    ("51200CIROC VODKA", "GENERAL", 32.34),
-    ("52019MAKERS MARK BOURBON", "GENERAL", 21.8),
-    ("54030CHIVAS REGAL", "GENERAL", 23.7),
-    ("55006CARDHU", "GENERAL", 25.05),
-    ("59051COINTREAU", "GENERAL", 13.25),
-    ("50115SANTA TERESA RON", "GENERAL", 11.76),
-    ("51002ABSOLUT VAINILLA", "GENERAL", 15.53),
-    ("51005ABSOLUT AZUL", "GENERAL", 12.35),
-    ("51038STOLICHNAYA", "GENERAL", 9.35),
-    ("200241, BRANDY CARLOS I 70 CL", "BRANDY", 23.72),
-    ("200304, LICOR CAMPARI 1 L", "LICOR", 15.73),
-    ("00050080  RON HAVANA CLUB 7 AÑOS", "RON", 19.83),
-    ("00031059, SAMBUCA RAMAZZOTTI 70CL", "LICOR", 9.83),
-    { name: "200400, LICOR KAHLUA 70 CL", fam: "LICOR", price: 13.61 },
-    { name: "ALMA BOHEMIA DE ALTANZA ROSE", fam: "VINO ROSADO", price: 6.4 },
-    { name: "200507, LICOR PERNOD 1 L", fam: "LICOR", price: 15.2 },
-    { name: "0050150, VODKA BELVEDERE 1 LITRO", fam: "VODKA", price: 30.82 },
-    { name: "00001062, RIBAS SIO NEGRE 2022 3/4", fam: "VINO TINTO", price: 17.07 },
-    { name: "00008109, ALBARIÑO PUERTA SANTA 3/4", fam: "GENERAL", price: 7.7 },
-    { name: "00031013, LICOR APEROL LITRO", fam: "GENERAL", price: 11.4 },
-    { name: "B23014PEDRO XIMENEZ COLECCIONR.AMILLO", fam: "GENERAL", price: 29.74 },
-    { name: "00031014, CAMPARI 1 L", fam: "GENERAL", price: 16.04 },
-    { name: "JAMESON", fam: "LICOR", price: 14.87 },
-    { name: "00043002, BRANDY CARDENAL MENDOZA 70CL", fam: "BRANDY", price: 19.93 },
-    { name: "00043070, BRANDY SUAU 15 AÑOS", fam: "BRANDY", price: 18.23 },
-    { name: "00048010bombay saphire", fam: "GIN", price: 14.73 },
-    { name: "00048079, GIN TANQUERAY 0.0%", fam: "GIN", price: 11.63 },
-    { name: "00098014, GIN BROCKMAN'S 1LITRO", fam: "GIN", price: 22.8 },
-    { name: "0189, GINGER BEER PUIG 0,2 NO RET 24UD", fam: "REFRESCO", price: 0.84 },
-    { name: "200450, GIN PALMA 70 CL", fam: "GIN", price: 30.37 },
-    { name: "00050004, RON DIPLOMATICO RESERVA EXCLUSIVA 70 CL", fam: "RON", price: 30.46 },
-    { name: "00051013, VODKA GREY GOOSE 1 L", fam: "VODKA", price: 35.22 },
-    { name: "00051033, VODKA SMIRNOFF LITRO IRR. DIAGEO", fam: "VODKA", price: 13.26 },
-    { name: "00051068, VODKA BELUGA NOBLE 70CL", fam: "VODKA", price: 24.73 },
-    { name: "00053033, WHISKY JIM BEAN 70CL", fam: "WHISKY", price: 13.3 },
-    { name: "00054039, WHISKY JOHNNIE WALKER BLACK IRR", fam: "WHISKY", price: 22.83 },
-    { name: "00053027WHISKY JACK DANIELS", fam: "WHISKY", price: 24.2 },
-    { name: "00055066, WHISKY JOHNNIE WALKER GOLD 70CL DIAGEO", fam: "WHISKY", price: 40.61 },
-    { name: "00052045 WHISKY JOHNNIE WALKER RED 70CL DIAGEO", fam: "WHISKY", price: 12.22 },
-    { name: "00057000, CREMA BAILEYS 70 CL DIAGEO", fam: "LICOR", price: 16.4 },
-    { name: "00059118, PISCO DEMONIO ANDES ACOLADO 70CL", fam: "AA", price: 17.06 },
-    { name: "00059212, LIMONCELLO MOYA 70CL", fam: "LICOR", price: 8.37 },
-    { name: "00059370, CREME DE CASSIS BOLS", fam: "LICOR", price: 8.87 },
-    { name: "00059386, TRIPLE SEC MOYA LITRO", fam: "LICOR", price: 5.8 },
-    { name: "00065951 SIROPE ODK AZÚCAR BLANQUILLA 75 CL", fam: "SIROPE", price: 7.85 },
-    { name: "00062389 SIROPE ODK FRESA 75 CL", fam: "SIROPE", price: 10.47 },
-    { name: "00062409 SIROPE ODK BANANA 75 CL", fam: "SIROPE", price: 10.47 },
-    { name: "GIN LA MALLORQUINA CJ 25 UD 100 ML", fam: "GIN", price: 6.44 },
-    { name: "18MZTM17, GRAPPA TRENTINA MORBIDA MARZADRO 70 CL", fam: "AA", price: 12.52 },
-    { name: "00050000, RON AMAZONAS 70 CL", fam: "RON", price: 12.21 },
-    { name: "A50516, MARTINI RISERVA AMBRATO", fam: "VERMUT", price: 10.92 },
-    { name: "A51155, MARTINI RISERVA RUBINO", fam: "VERMUT", price: 10.92 },
-    { name: "00001074 MASIA BATLE BLANC DE BLANCS 3/4", fam: "VINO BLANCO", price: 9.67 },
-    { name: "00001744 CAN AXARTELL ROSADO 3/4", fam: "VINO ROSADO", price: 10.4 },
-    { name: "00001706 CAN AXARTELL BLANC 3/5", fam: "VINO BLANCO", price: 8.47 },
-    { name: "00001765  MADO 3/6", fam: "VINO BLANCO", price: 11.74 },
-    { name: "00001017 MIQUEL OLIVER ORIGI BLANC 23 3/4", fam: "VINO BLANCO", price: 9.12 },
-    { name: "00001285 ARMERO ADROVER FINCA SON PROHENS ROS", fam: "VINO ROSADO", price: 15.35 },
-    { name: "00004393 LA VICALANDA TINTO RESERVA 3/4", fam: "VINO TINTO", price: 22.18 },
-    { name: "00001240 TONI GELABERT ILLENC NEGRE 3/4", fam: "VINO TINTO", price: 19.8 },
-    { name: "00001706 BORDOY MARES BLANC 3/4", fam: "VINO BLANCO", price: 8.47 },
-    { name: "00004973 TOBIA SELECCION DE AUTOR TINTO CZA 3/4", fam: "VINO TINTO", price: 8.75 },
-    { name: "00005001PINNA FIDELIS BLANCO VERDEJO 3/4", fam: "VINO BLANCO", price: 4.86 },
-    { name: "27110PROVETTO BRUT 3/4", fam: "GENERAL", price: 2.09 },
-    { name: "00007178 MURVIEDRO SERICIS PINOT NOIR ROSADO 3/4", fam: "VINO ROSADO", price: 8.35 },
-    { name: "chablis jean collet", fam: "VINO BLANCO", price: 19.9 },
-    { name: "00008109 ALBARIÑO PUERTA SANTA 3/4", fam: "VINO BLANCO", price: 7.7 },
-    { name: "00008131 GARGALO GODELLO 2023 3/4", fam: "VINO BLANCO", price: 9.96 },
-    { name: "00001288 MIGUEL GELABERT CHARDONNAY ROURE 3/4", fam: "VINO BLANCO", price: 11.42 },
-    { name: "2552 CAN MAJORAL CALLET", fam: "VINO TINTO", price: 10.8 },
-    { name: "4820 TORRE DES CANONGE NEGRE", fam: "VINO TINTO", price: 28.0 },
-    { name: "4806 VIÑA SON FANGOS ROSAT", fam: "VINO ROSADO", price: 8.0 },
-    { name: "A18001 MORTIX RACO FRED BLANC", fam: "VINO BLANCO", price: 14.0 },
-    { name: "1928 ECO BINIGRAU", fam: "VINO ROSADO", price: 9.75 },
-    { name: "A20002DUNOR CUROLLA", fam: "VINO TINTO", price: 17.85 },
-    { name: "STA CATARINA PREMSAL", fam: "VINO BLANCO", price: 10.15 },
-    { name: "BUYXET SIRA NEGRE", fam: "VINO TINTO", price: 7.95 },
-    { name: "ANAVA ROSAT", fam: "VINO ROSADO", price: 12.5 },
-    { name: "SA GRUTA BLANC ECO", fam: "VINO BLANCO", price: 8.4 },
-    { name: "CAN VERDURA NEGRE", fam: "VINO TINTO", price: 8.2 },
-    { name: "CAN VERDURA SON AGULLO", fam: "VINO TINTO", price: 26.6 },
-    { name: "VALSERRANO GRAN RESERVA BLANCO", fam: "VINO BLANCO", price: 25.5 },
-    { name: "ATLANTIDA TINTO", fam: "VINO TINTO", price: 20.3 },
-    { name: "LOS LOROS LISTAN BLANCO", fam: "VINO TINTO", price: 13.4 },
-    { name: "BHILAR PHINCA HAPA TTO", fam: "VINO BLANCO", price: 16.8 },
-    { name: "FTG15B24FEVER TREE GINGER ALE", fam: "REFRESCO", price: 1.43 },
-    { name: "TIO MARTIN CRIANZA", fam: "VINO TINTO", price: 6.5 },
-    { name: "NABAL CRIANZA", fam: "VINO TINTO", price: 15.7 },
-    { name: "NEXUS ONE", fam: "VINO TINTO", price: 8.55 },
-    { name: "BOBOS C.LA BORRACHA BOBAL", fam: "VINO TINTO", price: 18.2 },
-    { name: "00027110 PROVETTO", fam: "CAVA", price: 2.09 },
-    { name: "00481, CAVA MASIA SALAT ORGANIC BRUT NATURE", fam: "CAVA", price: 4.42 },
-    { name: "QUELIAS ROSE", fam: "VINO ROSADO", price: 8.6 },
-    { name: "MAURO VENDIMIA SELECCIONADA", fam: "VINO TINTO", price: 55.5 },
-    { name: "ALBARIÑO TEMPUS VIVENDI", fam: "VINO BLANCO", price: 12.6 },
-    { name: "SEÑORIO DA TORRE", fam: "VINO TINTO", price: 7.95 },
-    { name: "FEDELLOS LOMBA DOS ARES", fam: "VINO TINTO", price: 13.29 },
-    { name: "PEDRO ESCUDERO VERDEJO", fam: "VINO BLANCO", price: 6.95 },
-    { name: "PEDRO ESCUDERO SAUVIGNON", fam: "VINO BLANCO", price: 6.95 },
-    { name: "AROTZ TXAKOLI", fam: "VINO BLANCO", price: 16.78 },
-    { name: "GARAGEWINE BRUJIDERA", fam: "VINO TINTO", price: 11.35 },
-    { name: "CHABLIS JEAN COLLET", fam: "VINO BLANCO", price: 19.5 },
-    { name: "MAZONE BAROLO PAGO MERIAME", fam: "VINO TINTO", price: 43.0 },
-    { name: "SCRIANI VALPOLICELLA RIPASSO", fam: "VINO TINTO", price: 14.0 },
-    { name: "RIESLING VON BUHL DIDESHEIMER", fam: "VINO BLANCO", price: 13.8 },
-    { name: "THREE STICKS GAP'S CROWN PINOT NOIR", fam: "VINO TINTO", price: 58.5 },
-    { name: "CHATEAU PEYRASSOL ROSE", fam: "GENERAL", price: 20.7 },
-    { name: "00028121 CAVA MASCARO INITIUM BRUT 3/4", fam: "GENERAL", price: 6.99 },
-    { name: "IMPROMPTU P.NOIR ROSADO", fam: "VINO ROSADO", price: 17.55 },
-    { name: "CASTELROIG BRUT ROSADO", fam: "CAVA", price: 10.95 },
-    { name: "CAVA NIT DE LLUNA PLENA", fam: "CAVA", price: 6.9 },
-    { name: "CAVA TANTUM ERGO PINOT ROSE", fam: "CAVA", price: 20.25 },
-    { name: "CHAMPAGNE LE TRADITION BRUT ALLOUCHE", fam: "CAVA", price: 23.9 },
-    { name: "FREIXENET OO", fam: "CAVA", price: 6.35 },
-    { name: "00027270 CAVA MURVIEDRO ARTS DE LUNA BRUT 3/4", fam: "GENERAL", price: 8.63 },
-    { name: "GRAMONA IMPERIAL BRUT", fam: "CAVA", price: 19.3 },
-    { name: "SABATÉ I COCA MOSSET", fam: "CAVA", price: 12.4 },
-    { name: "0003054 PERNOD LITRO", fam: "LICOR", price: 15.2 },
-    { name: "00031060 GRAPPA MARZADRO CALIERE BIANCA LITRO", fam: "AA", price: 12.52 },
-    { name: "00038009 VERMUT RUMBO BLANC MOYA 75 CL", fam: "VERMUT", price: 14.84 },
-    { name: "00038010 VERMUT RUMBO NEGREOYA 75 CL", fam: "VERMUT", price: 14.84 },
-    { name: "00038032 MARTINI AMBRATO RESERVA 3/4 18º", fam: "VERMUT", price: 10.92 },
-    { name: "00038033 MARTINI RUBINO RESERVA 3/4 18º", fam: "VERMUT", price: 10.92 },
-    { name: "00043002 BRANDY CARDENAL MENDOZA 70 CL", fam: "BRANDY", price: 19.93 },
-    { name: "00043008 BRNADY CARLOS I 70CL", fam: "BRANDY", price: 22.07 },
-    { name: "00050027 RON BACARDI LITRO", fam: "RON", price: 14.03 },
-    { name: "JNPR SPRZ 7O CL", fam: "GENERAL", price: 16.04 },
-    { name: "CACHACA 51", fam: "GENERAL", price: 12.04 },
-    { name: "ANGOSTURA BITTER", fam: "GENERAL", price: 11.49 },
-    { name: "VERMUTYZAGUIRRE", fam: "VERMUT", price: 5.29 },
-    { name: "G VINE 0.70", fam: "GIN", price: 25.76 },
-    { name: "GORDONS 0.70", fam: "GIN", price: 10.29 },
-    { name: "XORIGUER O,70", fam: "GIN", price: 10.58 },
-    { name: "SEAGRRAMS", fam: "GIN", price: 4.01 },
-    { name: "NORDES", fam: "GIN", price: 22.4 },
-    { name: "MONKEY 47 0.50", fam: "GIN", price: 30.41 },
-    { name: "00050004 RON DIPLOMATICO", fam: "RON", price: 30.46 },
-    { name: "7743.30, ARPEGGIO DESCAFEINADO", fam: "CAFÉ", price: 0.45 },
-    { name: "7748.30, RISTRETTO", fam: "CAFÉ", price: 0.44 },
-    { name: "CHMAUA, CHOCOLATE PERSONALIZADO CJ", fam: "SNACKS", price: 1.8 },
-    { name: "GOMINOLA OSITOS HARIBO", fam: "GENERAL", price: 0.52 },
-    { name: "PRINGLES 40 GR", fam: "GENERAL", price: 0.69 },
-    { name: "KIT KAT", fam: "GENERAL", price: 0.68 },
-    { name: "20Y, TARRO 60GR ALMENDRAS CON HIERBAS MEDITERRANEAS 24UD CJ", fam: "SNACKS", price: 3.45 },
-    { name: "7L, TARRO 60GR ALMENDRAS TOSTADAS 24 UD CJ", fam: "SNACKS", price: 3.45 },
-    { name: "FTB15B24FEVER TREE GINGER BEER", fam: "REFRESCO", price: 1.45 },
-    { name: "0191, LIMONADA PUIG 0,2L NO RET 24UD", fam: "REFRESCO", price: 0.69 },
-    { name: "0192, TONICA MARINA PUIG 0,2L NO RET 24UD", fam: "REFRESCO", price: 0.74 },
-    { name: "0193, TARONJADA PUIG 0,2L NO RET 24UD", fam: "REFRESCO", price: 0.69 },
-    { name: "0194, COLA PUIG 0,2L NO RET 24UD", fam: "REFRESCO", price: 0.69 },
-    { name: "0195, PINYA PUIG 33CL NO RET 24UD", fam: "REFRESCO", price: 0.76 },
-    { name: "GIN BERGAMOTA CJ 25 UD 100 ML", fam: "GIN", price: 6.44 },
-    { name: "200622, GIN CABRABOC MALLORCA", fam: "GIN", price: 18.95 },
-    { name: "GIN VERMELL CJ 25 UD 100 ML", fam: "GIN", price: 6.44 },
-    { name: "PATATILAS MEDITERR´NAEAS FLOR DE SAL 22 UD", fam: "SNACKS", price: 0.84 },
-    { name: "CAFÉ MUTANTE INTENSI 1KG", fam: "GENERAL", price: 18.4 },
-    { name: "INFUSION MANZANILLA  PIRAMIDE", fam: "GENERAL", price: 0.4 },
-    { name: "INFUSION FRUTOS DEL BOQUE  PIRAMIDE", fam: "GENERAL", price: 0.4 },
-    { name: "INFUSION TE VERDE PIRAMIDE", fam: "GENERAL", price: 0.4 },
-    { name: "INFUSION TE NEGRO PIRAMIDE", fam: "GENERAL", price: 0.4 },
-    { name: "CAFÉ DESCAFEINADO MUTANTE DECAFEINADO CAPSULAS", fam: "GENERAL", price: 0.41 },
-    { name: "EDULCORANTE", fam: "GENERAL", price: 0.33 },
-    { name: "AZUCAR MORENO", fam: "GENERAL", price: 0.026 },
-    { name: "AZUCAR BLANCA SOBRE", fam: "GENERAL", price: 0.026 },
-    { name: "LECHE ENTERA", fam: "GENERAL", price: 1.201 },
-    { name: "SIN LACTOSA", fam: "GENERAL", price: 1.424 },
-    { name: "LECHE SOJA", fam: "GENERAL", price: 1.46 },
-    { name: "AVENA", fam: "GENERAL", price: 1.607 },
-    { name: "ALMENDRA", fam: "GENERAL", price: 1.598 },
-    { name: "KETCHUP", fam: "GENERAL", price: 0.58 },
-    { name: "MOSTAZA", fam: "GENERAL", price: 0.65 },
-    { name: "MAYONESA", fam: "GENERAL", price: 0.64 },
-    { name: "SALSA LEA PERRINS", fam: "GENERAL", price: 2.39 },
-    { name: "TABASCO", fam: "GENERAL", price: 1.45 },
-    { name: "PRINGLES ORIGINAL", fam: "MINIBAR", price: 0.69 },
-    { name: "KIT KAT", fam: "MINIBAR", price: 0.689 },
-    { name: "HARIBO", fam: "MINIBAR", price: 0.527 },
-    { name: "CAPSULAS DE CAFÉ", fam: "MINIBAR", price: 0.48 },
-    { name: "CAPSULAS DE CAFÉ DESC.", fam: "MINIBAR", price: 0.45 },
-    { name: "RED BULL COCO", fam: "MINIBAR", price: 1.12 },
-    { name: "RED BULL", fam: "MINIBAR", price: 1.115 },
-    { name: "COKE", fam: "MINIBAR", price: 0.793 },
-    { name: "COKE ZERO", fam: "MINIBAR", price: 0.793 },
-    { name: "F. LIMON", fam: "MINIBAR", price: 0.738 },
-    { name: "F. NARANJA", fam: "MINIBAR", price: 0.738 },
-    { name: "VINO BATIBALAUSI BLANCO 750ML", fam: "MINIBAR", price: 7.81 },
-    { name: "CAVA JUVÉ & CAMPS  350ML", fam: "MINIBAR", price: 7.0 },
-    { name: "CERVEZA ROSA BLANCA", fam: "MINIBAR", price: 0.76 },
-    { name: "AGUA FONT MAJOR C/GAS", fam: "MINIBAR", price: 0.33 },
-    { name: "AGUA FONT MAJOR S/GAS", fam: "MINIBAR", price: 0.29 },
-    { name: "3903-1, RBLISS SIG TON WTR VR20 C24", fam: "REFRESCO", price: 1.33 },
-    { name: "3906-1, RBLISS LEM MIXER VR20 C24 HT", fam: "REFRESCO", price: 1.33 },
-    { name: "NESTEA CJ 24 UD", fam: "REFRESCO", price: 0.97 },
-    { name: "200170, COGNAC REMY MARTIN VSOP", fam: "BRANDY", price: 21.0 },
-    { name: "PALO", fam: "LICOR", price: 13.1 },
-    { name: "HELADO HAAGEN D", fam: "COCINA", price: 1.9 }
-]
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 text-white p-2 rounded-lg">
+                        <i data-lucide="chef-hat" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg text-slate-900 leading-tight">EscandalloPro</h1>
+                        <p class="text-xs text-slate-500">Gestión de Costes & Escandallos</p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Tabs -->
+                <nav class="flex space-x-8">
+                    <button onclick="switchTab('recetas')" id="tab-recetas" class="tab-active py-4 px-1 inline-flex items-center gap-2 text-sm font-medium">
+                        <i data-lucide="utensils" class="w-4 h-4"></i> Escandallos
+                    </button>
+                    <button onclick="switchTab('catalogo')" id="tab-catalogo" class="text-slate-500 hover:text-slate-700 py-4 px-1 inline-flex items-center gap-2 text-sm font-medium">
+                        <i data-lucide="database" class="w-4 h-4"></i> Catálogo Base (<span id="cat-count">257</span>)
+                    </button>
+                </nav>
 
-print(f"Total counted in python test array: {len(catalog_items)}")
+                <div class="flex items-center gap-2">
+                    <button onclick="exportAllData()" class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition flex items-center gap-1">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Respaldar
+                    </button>
+                    <label class="px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition cursor-pointer flex items-center gap-1">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> Cargar
+                        <input type="file" id="import-file" onchange="importAllData(event)" class="hidden" accept=".json">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: ESCANDALLOS / RECETAS               -->
+        <!-- ========================================== -->
+        <div id="view-recetas" class="space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm no-print">
+                <div class="flex items-center gap-3 w-full sm:w-auto flex-1">
+                    <div class="relative w-full sm:w-80">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="recipe-search" oninput="renderRecipeList()" placeholder="Buscar receta..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <button onclick="createNewRecipe()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition shadow-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Nuevo Escandallo
+                </button>
+            </div>
+
+            <!-- Dashboard Layout: List & Editor -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Recipe List Sidebar -->
+                <div class="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-4 no-print h-[calc(100vh-220px)] flex flex-col">
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 px-2">Listado de Recetas</h2>
+                    <div id="recipe-list" class="space-y-2 overflow-y-auto flex-1 pr-1">
+                        <!-- Dynamic recipe items -->
+                    </div>
+                </div>
+
+                <!-- Recipe Editor Panel -->
+                <div class="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm p-6 min-h-[calc(100vh-220px)] flex flex-col justify-between">
+                    <div id="editor-empty" class="h-full flex flex-col items-center justify-center text-slate-400 py-20">
+                        <i data-lucide="utensils-crossed" class="w-12 h-12 mb-3 stroke-1"></i>
+                        <p class="text-sm">Selecciona o crea una receta para comenzar el escandallo</p>
+                    </div>
+
+                    <div id="editor-content" class="hidden space-y-6">
+                        <!-- Header & General Info -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 border-b border-slate-200 pb-4">
+                            <div class="w-full sm:w-2/3 space-y-2">
+                                <input type="text" id="recipe-name" onchange="updateCurrentRecipeHeader()" placeholder="Nombre de la Receta / Cóctel" class="text-xl font-bold text-slate-900 w-full border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none px-1 py-0.5 rounded">
+                                <div class="flex items-center gap-4 text-xs text-slate-500">
+                                    <span>Categoría: 
+                                        <select id="recipe-category" onchange="updateCurrentRecipeHeader()" class="font-medium text-slate-700 bg-transparent border-none focus:ring-0 p-0">
+                                            <option value="Cóctel">Cóctel</option>
+                                            <option value="Plato">Plato</option>
+                                            <option value="Bebida">Bebida</option>
+                                            <option value="Postre">Postre</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 no-print w-full sm:w-auto justify-end">
+                                <button onclick="printRecipe()" class="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition" title="Imprimir / Exportar PDF">
+                                    <i data-lucide="printer" class="w-5 h-5"></i>
+                                </button>
+                                <button onclick="deleteCurrentRecipe()" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="Eliminar Escandallo">
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Ingredients Table -->
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Ingredientes & Insumos</h3>
+                                <button onclick="openAddIngredientModal()" class="no-print text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Añadir del Catálogo
+                                </button>
+                            </div>
+
+                            <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                                        <tr>
+                                            <th class="py-2.5 px-3">Ingrediente</th>
+                                            <th class="py-2.5 px-3 text-right">Cant. Usada</th>
+                                            <th class="py-2.5 px-3 text-right">Precio Ref.</th>
+                                            <th class="py-2.5 px-3 text-right">Coste Ingrediente</th>
+                                            <th class="py-2.5 px-3 text-center no-print w-10"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recipe-ingredients-body" class="divide-y divide-slate-100 text-slate-700">
+                                        <!-- Dynamic Ingredient Rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Calculations & Ratios Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <!-- Coste Total Materia Prima -->
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm space-y-1">
+                                <span class="text-xs text-slate-500 font-medium block">Coste Materia Prima (Coste Total)</span>
+                                <span id="calc-cost-total" class="text-lg font-bold text-slate-900 block">€0.00</span>
+                            </div>
+
+                            <!-- PVPR & IVA -->
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm space-y-1">
+                                <div class="flex justify-between items-center">
+                                    <label for="recipe-pvp" class="text-xs text-slate-500 font-medium">PVP Venta (PVP Recomendado con IVA)</label>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-sm font-semibold text-slate-400">€</span>
+                                    <input type="number" id="recipe-pvp" step="0.10" min="0" onchange="calculateRecipeTotals()" class="w-full text-lg font-bold text-slate-900 border-b border-slate-200 focus:border-blue-500 focus:outline-none py-0">
+                                </div>
+                                <div class="flex items-center gap-2 text-[10px] text-slate-400 pt-1">
+                                    <span>IVA:</span>
+                                    <select id="recipe-vat" onchange="calculateRecipeTotals()" class="bg-transparent border-none p-0 text-[10px] text-slate-600 font-medium focus:ring-0">
+                                        <option value="21">21%</option>
+                                        <option value="10" selected>10%</option>
+                                        <option value="4">4%</option>
+                                        <option value="0">0%</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Margen & Food Cost -->
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm space-y-1">
+                                <span class="text-xs text-slate-500 font-medium block">Food Cost % / Margen Brut</span>
+                                <div class="flex items-baseline justify-between">
+                                    <span id="calc-food-cost" class="text-lg font-bold text-slate-900">0.0%</span>
+                                    <span id="calc-margin-net" class="text-xs font-semibold text-emerald-600">Margen: €0.00</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400">Calculado sobre el Neto (sin IVA)</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: CATÁLOGO DE PRODUCTOS (257)          -->
+        <!-- ========================================== -->
+        <div id="view-catalogo" class="hidden space-y-6">
+            <!-- Controls & Actions Bar -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-1">
+                    <div class="relative w-full sm:w-80">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="catalog-search" oninput="renderCatalogTable()" placeholder="Buscar por código o producto..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <select id="catalog-family-filter" onchange="renderCatalogTable()" class="border border-slate-200 rounded-lg text-sm px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="ALL">Todas las Familias</option>
+                        <!-- Dynamic options -->
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                    <button onclick="openAddCatalogModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Añadir Artículo
+                    </button>
+                    <button onclick="exportCatalogToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar Excel
+                    </button>
+                    <button onclick="resetCatalogToDefault()" class="text-slate-400 hover:text-rose-600 p-2 rounded-lg transition" title="Restablecer catálogo original (257 items)">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Catalog Table -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto max-h-[calc(100vh-280px)] overflow-y-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200 sticky top-0 bg-slate-50 z-10">
+                            <tr>
+                                <th class="py-3 px-4">Código / Referencia</th>
+                                <th class="py-3 px-4">Nombre del Producto</th>
+                                <th class="py-3 px-4">Familia</th>
+                                <th class="py-3 px-4 text-right">Precio Compra (€)</th>
+                                <th class="py-3 px-4 text-center w-24">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalog-table-body" class="divide-y divide-slate-100 text-slate-700">
+                            <!-- Catalog Rows -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-slate-50 px-4 py-2 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center">
+                    <span id="catalog-counter-text">Mostrando 0 productos</span>
+                    <span>Precios sin IVA aplicable</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- MODALS & OVERLAYS                          -->
+    <!-- ========================================== -->
+
+    <!-- Modal 1: Select Ingredient from Catalog -->
+    <div id="modal-select-ingredient" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-semibold text-slate-800">Seleccionar Ingrediente del Catálogo</h3>
+                <button onclick="closeModal('modal-select-ingredient')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4 border-b border-slate-100 bg-slate-50 flex gap-2">
+                <div class="relative flex-1">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="modal-search-ingredient" oninput="renderModalIngredientList()" placeholder="Filtrar catálogo..." class="w-full pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div id="modal-ingredient-list" class="divide-y divide-slate-100 overflow-y-auto flex-1 p-2">
+                <!-- Items list -->
+            </div>
+            <div class="p-3 bg-slate-50 border-t border-slate-200 text-right">
+                <button onclick="closeModal('modal-select-ingredient')" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Add/Edit Product in Catalog -->
+    <div id="modal-catalog-item" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-catalog-title" class="font-bold text-slate-800">Añadir Producto al Catálogo</h3>
+                <button onclick="closeModal('modal-catalog-item')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-catalog-item" onsubmit="saveCatalogItem(event)" class="space-y-3">
+                <input type="hidden" id="cat-item-index" value="-1">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Código / Referencia</label>
+                    <input type="text" id="cat-item-code" placeholder="Ej: 00048013" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nombre del Producto *</label>
+                    <input type="text" id="cat-item-name" required placeholder="Ej: GIN HENDRICK'S 70 CL" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Familia / Categoría *</label>
+                    <input type="text" id="cat-item-family" required placeholder="Ej: GIN, REFRESCO, VINO TINTO" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" list="families-list">
+                    <datalist id="families-list"></datalist>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Precio Compra (€) *</label>
+                    <input type="number" id="cat-item-price" step="0.001" min="0" required placeholder="0.00" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-catalog-item')" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOGIC APPLICATION JS -->
+    <script>
+        // =========================================================================
+        // COMPLETE BASE CATALOG DATA (EXACTLY 257 ITEMS INTEGRATED)
+        // =========================================================================
+        const DEFAULT_CATALOG = [
+            { code: "110450", name: "ROSA BLANCA 1/3 RET C/24 UN", family: "CERVEZA", price: 1.52 },
+            { code: "0RF0296", name: "RED BULL ENERGY DRINK 25 CL LATA 24U", family: "ZUMO", price: 1.12 },
+            { code: "0ZU0048", name: "PAGO PIÑA 20CL 24U", family: "ZUMO", price: 1.28 },
+            { code: "0ZU0049", name: "PAGO MELOCOTON 20CL 24U", family: "ZUMO", price: 1.28 },
+            { code: "0ZU0221", name: "PAGO PIÑA 1L PET 6U", family: "ZUMO", price: 3.01 },
+            { code: "0ZU0225", name: "PAGO ARANDANOS 20CL 12 U", family: "ZUMO", price: 1.625 },
+            { code: "0ZU0230", name: "PAGO ZUMO DE MANZANA 20CL 12 U", family: "ZUMO", price: 2.52 },
+            { code: "54492974", name: "ZUMO MINUTE MAID NARANJA", family: "ZUMO", price: 0.61 },
+            { code: "40822716", name: "ZUMO MINUTE MAID MELOCOTON", family: "ZUMO", price: 0.61 },
+            { code: "54491090", name: "ZUMO MINUTE MAID PIÑA", family: "ZUMO", price: 0.61 },
+            { code: "54007567", name: "ZUMO MINUTE MAID NARANJA", family: "ZUMO", price: 0.61 },
+            { code: "54492982", name: "ZUMO MINUTE MAID TOMATE", family: "ZUMO", price: 0.61 },
+            { code: "54499267", name: "ZUMO MINUTE MAID MANZANA", family: "ZUMO", price: 0.61 },
+            { code: "CJ13", name: "CAJA DAMM BOT 1/3RET P PLAS", family: "CERVEZA", price: 1.47 },
+            { code: "EC13", name: "DAURA DAMM 1/3 RET. CAJ.", family: "CERVEZA", price: 1.507 },
+            { code: "ED13", name: "ESTRELLA DAMM 1/3RET.pp", family: "CERVEZA", price: 1.4 },
+            { code: "MJ12", name: "AGUA FONT MAJOR 1/2 RET CJ", family: "AGUA", price: 0.27 },
+            { code: "MJG12", name: "AGUA FONT MAJOR 1/2 GAS RET", family: "AGUA", price: 0.312 },
+            { code: "524", name: "FANTA NARANJA VR237 C24", family: "REFRESCO", price: 0.63 },
+            { code: "534", name: "FANTA LIM VR237 C24", family: "REFRESCO", price: 0.63 },
+            { code: "544", name: "COCA COLA VR237 C24 UN", family: "REFRESCO", price: 0.74 },
+            { code: "2548", name: "SPRITE VR20 C24 UN", family: "REFRESCO", price: 0.58 },
+            { code: "3919", name: "RBLISS SODA VNR20 C24", family: "REFRESCO", price: 0.87 },
+            { code: "FT115B24", name: "FEVER TREE TONIC", family: "REFRESCO", price: 1.39 },
+            { code: "FTP15B24", name: "FEVER TREE GRAPEFRUIT", family: "REFRESCO", price: 1.42 },
+            { code: "00048013", name: "GIN HENDRICK'S 70 CL", family: "GIN", price: 25.35 },
+            { code: "00048018", name: "GIN TANQUERAY TEN LITRO", family: "GIN", price: 25.25 },
+            { code: "4417", name: "FUZE LIMON VR30 C24", family: "REFRESCO", price: 0.74 },
+            { code: "3901-1", name: "RBLISS TON WTR VR20 C24", family: "REFRESCO", price: 0.92 },
+            { code: "544-2", name: "COCA COLA ZERO VR237 C24 UN", family: "REFRESCO", price: 0.706 },
+            { code: "1080", name: "COCA COLA LATA 33 C24", family: "REFRESCO", price: 1.61 },
+            { code: "00026060", name: "CAVA ARS COLLECTA BLANC DE BLANCS 3/4", family: "CAVA", price: 15.02 },
+            { code: "00754", name: "CORIMBO 2019", family: "VINO TINTO", price: 18.71 },
+            { code: "01148", name: "TAITTINGER BRUT RESERVE", family: "GENERAL", price: 46.96 },
+            { code: "032019", name: "CAN MAJORCAL BUTIBALAUSI BLANC 2022", family: "GENERAL", price: 7.81 },
+            { code: "3076", name: "FRANZISKANER WEISSBIER", family: "CERVEZA", price: 1.73 },
+            { code: "3074", name: "FRANZISKANER WEISSBIER 00", family: "GENERAL", price: 1.7 },
+            { code: "6435", name: "ALHAMBRA RESERVA 1925 33CL", family: "GENERAL", price: 1.87 },
+            { code: "0002598", name: "ENVASES MAHOU VIDRIO RET 33CL", family: "GENERAL", price: 0.07 },
+            { code: "PRD0000617", name: "ALHAMBRA RESERVA 1925 VIDRIO NR 33CL CAJA 24U", family: "GENERAL", price: 1.18 },
+            { code: "PRD0005393", name: "MAHOU 0/0 TOSTADA 33 CL 24 U.", family: "GENERAL", price: 1.03 },
+            { code: "00059136", name: "HERBES DOLCES -MOYA 1L", family: "GENERAL", price: 8.04 },
+            { code: "00059185", name: "HERBES SEQUES - MOYA 1L", family: "GENERAL", price: 9.54 },
+            { code: "00059164", name: "HERBES MESCLADES - MOYA 70CL", family: "GENERAL", price: 8.55 },
+            { code: "00050125", name: "RON BRUGAL 1888 70 CL", family: "GENERAL", price: 35.31 },
+            { code: "00030035", name: "ANIS SECO TRES CAIRES 70 CL", family: "GENERAL", price: 14.22 },
+            { code: "157096", name: "AMARO RAMAZZOTI 0.70", family: "GENERAL", price: 12.83 },
+            { code: "157146", name: "AMARO MONTENEGRO 0,700", family: "GENERAL", price: 11.4 },
+            { code: "163162", name: "TEQUILA PATRON SILVER 70 CL", family: "GENERAL", price: 39.13 },
+            { code: "163164", name: "TEQUILA PATRON AÑEJO 70 CL", family: "GENERAL", price: 60.91 },
+            { code: "00058006", name: "TEQUILA PATRON REPOSADO 70 CL", family: "GENERAL", price: 45.11 },
+            { code: "00058009", name: "TEQUILAREPOSADO", family: "GENERAL", price: 13.48 },
+            { code: "000058011", name: "TEQUILA SILVER CUERVO BLANCO", family: "GENERAL", price: 12.58 },
+            { code: "165008", name: "AMARETTO DI SARONNO 70 CL", family: "LICOR", price: 13.44 },
+            { code: "00050125", name: "RON ZACAPA 23 AÑOS 70 CL", family: "RON", price: 44.66 },
+            { code: "200238", name: "GIN MARE 70 CL", family: "GIN", price: 29.3 },
+            { code: "59249", name: "MALIBU", family: "GENERAL", price: 10.59 },
+            { code: "59343", name: "PASSOA", family: "GENERAL", price: 9.99 },
+            { code: "59366", name: "TIA MARIA", family: "GENERAL", price: 13.22 },
+            { code: "62000", name: "FRANGELICO", family: "GENERAL", price: 12.04 },
+            { code: "191003", name: "CAVA JUVE DE CAMPSESSENTIAL PURPURA", family: "GENERAL", price: 7.0 },
+            { code: "51200", name: "CIROC VODKA", family: "GENERAL", price: 32.34 },
+            { code: "52019", name: "MAKERS MARK BOURBON", family: "GENERAL", price: 21.8 },
+            { code: "54030", name: "CHIVAS REGAL", family: "GENERAL", price: 23.7 },
+            { code: "55006", name: "CARDHU", family: "GENERAL", price: 25.05 },
+            { code: "59051", name: "COINTREAU", family: "GENERAL", price: 13.25 },
+            { code: "50115", name: "SANTA TERESA RON", family: "GENERAL", price: 11.76 },
+            { code: "51002", name: "ABSOLUT VAINILLA", family: "GENERAL", price: 15.53 },
+            { code: "51005", name: "ABSOLUT AZUL", family: "GENERAL", price: 12.35 },
+            { code: "51038", name: "STOLICHNAYA", family: "GENERAL", price: 9.35 },
+            { code: "200241", name: "BRANDY CARLOS I 70 CL", family: "BRANDY", price: 23.72 },
+            { code: "200304", name: "LICOR CAMPARI 1 L", family: "LICOR", price: 15.73 },
+            { code: "00050080", name: "RON HAVANA CLUB 7 AÑOS", family: "RON", price: 19.83 },
+            { code: "00031059", name: "SAMBUCA RAMAZZOTTI 70CL", family: "LICOR", price: 9.83 },
+            { code: "200400", name: "LICOR KAHLUA 70 CL", family: "LICOR", price: 13.61 },
+            { code: "ALT001", name: "ALMA BOHEMIA DE ALTANZA ROSE", family: "VINO ROSADO", price: 6.4 },
+            { code: "200507", name: "LICOR PERNOD 1 L", family: "LICOR", price: 15.2 },
+            { code: "0050150", name: "VODKA BELVEDERE 1 LITRO", family: "VODKA", price: 30.82 },
+            { code: "00001062", name: "RIBAS SIO NEGRE 2022 3/4", family: "VINO TINTO", price: 17.07 },
+            { code: "00008109", name: "ALBARIÑO PUERTA SANTA 3/4", family: "GENERAL", price: 7.7 },
+            { code: "00031013", name: "LICOR APEROL LITRO", family: "GENERAL", price: 11.4 },
+            { code: "B23014", name: "PEDRO XIMENEZ COLECCIONR.AMILLO", family: "GENERAL", price: 29.74 },
+            { code: "00031014", name: "CAMPARI 1 L", family: "GENERAL", price: 16.04 },
+            { code: "JAM001", name: "JAMESON", family: "LICOR", price: 14.87 },
+            { code: "00043002", name: "BRANDY CARDENAL MENDOZA 70CL", family: "BRANDY", price: 19.93 },
+            { code: "00043070", name: "BRANDY SUAU 15 AÑOS", family: "BRANDY", price: 18.23 },
+            { code: "00048010", name: "BOMBAY SAPHIRE", family: "GIN", price: 14.73 },
+            { code: "00048079", name: "GIN TANQUERAY 0.0%", family: "GIN", price: 11.63 },
+            { code: "00098014", name: "GIN BROCKMAN'S 1LITRO", family: "GIN", price: 22.8 },
+            { code: "0189", name: "GINGER BEER PUIG 0,2 NO RET 24UD", family: "REFRESCO", price: 0.84 },
+            { code: "200450", name: "GIN PALMA 70 CL", family: "GIN", price: 30.37 },
+            { code: "00050004", name: "RON DIPLOMATICO RESERVA EXCLUSIVA 70 CL", family: "RON", price: 30.46 },
+            { code: "00051013", name: "VODKA GREY GOOSE 1 L", family: "VODKA", price: 35.22 },
+            { code: "00051033", name: "VODKA SMIRNOFF LITRO IRR. DIAGEO", family: "VODKA", price: 13.26 },
+            { code: "00051068", name: "VODKA BELUGA NOBLE 70CL", family: "VODKA", price: 24.73 },
+            { code: "00053033", name: "WHISKY JIM BEAN 70CL", family: "WHISKY", price: 13.3 },
+            { code: "00054039", name: "WHISKY JOHNNIE WALKER BLACK IRR", family: "WHISKY", price: 22.83 },
+            { code: "00053027", name: "WHISKY JACK DANIELS", family: "WHISKY", price: 24.2 },
+            { code: "00055066", name: "WHISKY JOHNNIE WALKER GOLD 70CL DIAGEO", family: "WHISKY", price: 40.61 },
+            { code: "00052045", name: "WHISKY JOHNNIE WALKER RED 70CL DIAGEO", family: "WHISKY", price: 12.22 },
+            { code: "00057000", name: "CREMA BAILEYS 70 CL DIAGEO", family: "LICOR", price: 16.4 },
+            { code: "00059118", name: "PISCO DEMONIO ANDES ACOLADO 70CL", family: "AA", price: 17.06 },
+            { code: "00059212", name: "LIMONCELLO MOYA 70CL", family: "LICOR", price: 8.37 },
+            { code: "00059370", name: "CREME DE CASSIS BOLS", family: "LICOR", price: 8.87 },
+            { code: "00059386", name: "TRIPLE SEC MOYA LITRO", family: "LICOR", price: 5.8 },
+            { code: "00065951", name: "SIROPE ODK AZÚCAR BLANQUILLA 75 CL", family: "SIROPE", price: 7.85 },
+            { code: "00062389", name: "SIROPE ODK FRESA 75 CL", family: "SIROPE", price: 10.47 },
+            { code: "00062409", name: "SIROPE ODK BANANA 75 CL", family: "SIROPE", price: 10.47 },
+            { code: "GIN001", name: "GIN LA MALLORQUINA CJ 25 UD 100 ML", family: "GIN", price: 6.44 },
+            { code: "18MZTM17", name: "GRAPPA TRENTINA MORBIDA MARZADRO 70 CL", family: "AA", price: 12.52 },
+            { code: "00050000", name: "RON AMAZONAS 70 CL", family: "RON", price: 12.21 },
+            { code: "A50516", name: "MARTINI RISERVA AMBRATO", family: "VERMUT", price: 10.92 },
+            { code: "A51155", name: "MARTINI RISERVA RUBINO", family: "VERMUT", price: 10.92 },
+            { code: "00001074", name: "MASIA BATLE BLANC DE BLANCS 3/4", family: "VINO BLANCO", price: 9.67 },
+            { code: "00001744", name: "CAN AXARTELL ROSADO 3/4", family: "VINO ROSADO", price: 10.4 },
+            { code: "00001706", name: "CAN AXARTELL BLANC 3/5", family: "VINO BLANCO", price: 8.47 },
+            { code: "00001765", name: "MADO 3/6", family: "VINO BLANCO", price: 11.74 },
+            { code: "00001017", name: "MIQUEL OLIVER ORIGI BLANC 23 3/4", family: "VINO BLANCO", price: 9.12 },
+            { code: "00001285", name: "ARMERO ADROVER FINCA SON PROHENS ROS", family: "VINO ROSADO", price: 15.35 },
+            { code: "00004393", name: "LA VICALANDA TINTO RESERVA 3/4", family: "VINO TINTO", price: 22.18 },
+            { code: "00001240", name: "TONI GELABERT ILLENC NEGRE 3/4", family: "VINO TINTO", price: 19.8 },
+            { code: "00001706-B", name: "BORDOY MARES BLANC 3/4", family: "VINO BLANCO", price: 8.47 },
+            { code: "00004973", name: "TOBIA SELECCION DE AUTOR TINTO CZA 3/4", family: "VINO TINTO", price: 8.75 },
+            { code: "00005001", name: "PINNA FIDELIS BLANCO VERDEJO 3/4", family: "VINO BLANCO", price: 4.86 },
+            { code: "27110", name: "PROVETTO BRUT 3/4", family: "GENERAL", price: 2.09 },
+            { code: "00007178", name: "MURVIEDRO SERICIS PINOT NOIR ROSADO 3/4", family: "VINO ROSADO", price: 8.35 },
+            { code: "CHAB01", name: "CHABLIS JEAN COLLET", family: "VINO BLANCO", price: 19.9 },
+            { code: "00008109-B", name: "ALBARIÑO PUERTA SANTA 3/4", family: "VINO BLANCO", price: 7.7 },
+            { code: "00008131", name: "GARGALO GODELLO 2023 3/4", family: "VINO BLANCO", price: 9.96 },
+            { code: "00001288", name: "MIGUEL GELABERT CHARDONNAY ROURE 3/4", family: "VINO BLANCO", price: 11.42 },
+            { code: "2552", name: "CAN MAJORAL CALLET", family: "VINO TINTO", price: 10.8 },
+            { code: "4820", name: "TORRE DES CANONGE NEGRE", family: "VINO TINTO", price: 28.0 },
+            { code: "4806", name: "VIÑA SON FANGOS ROSAT", family: "VINO ROSADO", price: 8.0 },
+            { code: "A18001", name: "MORTIX RACO FRED BLANC", family: "VINO BLANCO", price: 14.0 },
+            { code: "1928", name: "ECO BINIGRAU", family: "VINO ROSADO", price: 9.75 },
+            { code: "A20002", name: "DUNOR CUROLLA", family: "VINO TINTO", price: 17.85 },
+            { code: "STA001", name: "STA CATARINA PREMSAL", family: "VINO BLANCO", price: 10.15 },
+            { code: "BUY001", name: "BUYXET SIRA NEGRE", family: "VINO TINTO", price: 7.95 },
+            { code: "ANA001", name: "ANAVA ROSAT", family: "VINO ROSADO", price: 12.5 },
+            { code: "SAG001", name: "SA GRUTA BLANC ECO", family: "VINO BLANCO", price: 8.4 },
+            { code: "CAN001", name: "CAN VERDURA NEGRE", family: "VINO TINTO", price: 8.2 },
+            { code: "CAN002", name: "CAN VERDURA SON AGULLO", family: "VINO TINTO", price: 26.6 },
+            { code: "VAL001", name: "VALSERRANO GRAN RESERVA BLANCO", family: "VINO BLANCO", price: 25.5 },
+            { code: "ATL001", name: "ATLANTIDA TINTO", family: "VINO TINTO", price: 20.3 },
+            { code: "LOS001", name: "LOS LOROS LISTAN BLANCO", family: "VINO TINTO", price: 13.4 },
+            { code: "BHI001", name: "BHILAR PHINCA HAPA TTO", family: "VINO BLANCO", price: 16.8 },
+            { code: "FTG15B24", name: "FEVER TREE GINGER ALE", family: "REFRESCO", price: 1.43 },
+            { code: "TIO001", name: "TIO MARTIN CRIANZA", family: "VINO TINTO", price: 6.5 },
+            { code: "NAB001", name: "NABAL CRIANZA", family: "VINO TINTO", price: 15.7 },
+            { code: "NEX001", name: "NEXUS ONE", family: "VINO TINTO", price: 8.55 },
+            { code: "BOB001", name: "BOBOS C.LA BORRACHA BOBAL", family: "VINO TINTO", price: 18.2 },
+            { code: "00027110", name: "PROVETTO", family: "CAVA", price: 2.09 },
+            { code: "00481", name: "CAVA MASIA SALAT ORGANIC BRUT NATURE", family: "CAVA", price: 4.42 },
+            { code: "QUE001", name: "QUELIAS ROSE", family: "VINO ROSADO", price: 8.6 },
+            { code: "MAU001", name: "MAURO VENDIMIA SELECCIONADA", family: "VINO TINTO", price: 55.5 },
+            { code: "ALB002", name: "ALBARIÑO TEMPUS VIVENDI", family: "VINO BLANCO", price: 12.6 },
+            { code: "SEN001", name: "SEÑORIO DA TORRE", family: "VINO TINTO", price: 7.95 },
+            { code: "FED001", name: "FEDELLOS LOMBA DOS ARES", family: "VINO TINTO", price: 13.29 },
+            { code: "PED001", name: "PEDRO ESCUDERO VERDEJO", family: "VINO BLANCO", price: 6.95 },
+            { code: "PED002", name: "PEDRO ESCUDERO SAUVIGNON", family: "VINO BLANCO", price: 6.95 },
+            { code: "ARO001", name: "AROTZ TXAKOLI", family: "VINO BLANCO", price: 16.78 },
+            { code: "GAR001", name: "GARAGEWINE BRUJIDERA", family: "VINO TINTO", price: 11.35 },
+            { code: "CHA002", name: "CHABLIS JEAN COLLET SELECTION", family: "VINO BLANCO", price: 19.5 },
+            { code: "MAZ001", name: "MAZONE BAROLO PAGO MERIAME", family: "VINO TINTO", price: 43.0 },
+            { code: "SCR001", name: "SCRIANI VALPOLICELLA RIPASSO", family: "VINO TINTO", price: 14.0 },
+            { code: "RIE001", name: "RIESLING VON BUHL DIDESHEIMER", family: "VINO BLANCO", price: 13.8 },
+            { code: "THR001", name: "THREE STICKS GAP'S CROWN PINOT NOIR", family: "VINO TINTO", price: 58.5 },
+            { code: "PEY001", name: "CHATEAU PEYRASSOL ROSE", family: "GENERAL", price: 20.7 },
+            { code: "00028121", name: "CAVA MASCARO INITIUM BRUT 3/4", family: "GENERAL", price: 6.99 },
+            { code: "IMP001", name: "IMPROMPTU P.NOIR ROSADO", family: "VINO ROSADO", price: 17.55 },
+            { code: "CAS001", name: "CASTELROIG BRUT ROSADO", family: "CAVA", price: 10.95 },
+            { code: "NIT001", name: "CAVA NIT DE LLUNA PLENA", family: "CAVA", price: 6.9 },
+            { code: "TAN001", name: "CAVA TANTUM ERGO PINOT ROSE", family: "CAVA", price: 20.25 },
+            { code: "ALL001", name: "CHAMPAGNE LE TRADITION BRUT ALLOUCHE", family: "CAVA", price: 23.9 },
+            { code: "FRE001", name: "FREIXENET OO", family: "CAVA", price: 6.35 },
+            { code: "00027270", name: "CAVA MURVIEDRO ARTS DE LUNA BRUT 3/4", family: "GENERAL", price: 8.63 },
+            { code: "GRA001", name: "GRAMONA IMPERIAL BRUT", family: "CAVA", price: 19.3 },
+            { code: "SAB001", name: "SABATÉ I COCA MOSSET", family: "CAVA", price: 12.4 },
+            { code: "0003054", name: "PERNOD LITRO", family: "LICOR", price: 15.2 },
+            { code: "00031060", name: "GRAPPA MARZADRO CALIERE BIANCA LITRO", family: "AA", price: 12.52 },
+            { code: "00038009", name: "VERMUT RUMBO BLANC MOYA 75 CL", family: "VERMUT", price: 14.84 },
+            { code: "00038010", name: "VERMUT RUMBO NEGREOYA 75 CL", family: "VERMUT", price: 14.84 },
+            { code: "00038032", name: "MARTINI AMBRATO RESERVA 3/4 18º", family: "VERMUT", price: 10.92 },
+            { code: "00038033", name: "MARTINI RUBINO RESERVA 3/4 18º", family: "VERMUT", price: 10.92 },
+            { code: "00043002-B", name: "BRANDY CARDENAL MENDOZA 70 CL", family: "BRANDY", price: 19.93 },
+            { code: "00043008", name: "BRNADY CARLOS I 70CL", family: "BRANDY", price: 22.07 },
+            { code: "00050027", name: "RON BACARDI LITRO", family: "RON", price: 14.03 },
+            { code: "JNP001", name: "JNPR SPRZ 7O CL", family: "GENERAL", price: 16.04 },
+            { code: "CAC001", name: "CACHACA 51", family: "GENERAL", price: 12.04 },
+            { code: "ANG001", name: "ANGOSTURA BITTER", family: "GENERAL", price: 11.49 },
+            { code: "IZA001", name: "VERMUTYZAGUIRRE", family: "VERMUT", price: 5.29 },
+            { code: "GVI001", name: "G VINE 0.70", family: "GIN", price: 25.76 },
+            { code: "GOR001", name: "GORDONS 0.70", family: "GIN", price: 10.29 },
+            { code: "XOR001", name: "XORIGUER O,70", family: "GIN", price: 10.58 },
+            { code: "SEA001", name: "SEAGRRAMS", family: "GIN", price: 4.01 },
+            { code: "NOR001", name: "NORDES", family: "GIN", price: 22.4 },
+            { code: "MON001", name: "MONKEY 47 0.50", family: "GIN", price: 30.41 },
+            { code: "00050004-B", name: "RON DIPLOMATICO", family: "RON", price: 30.46 },
+            { code: "7743.30", name: "ARPEGGIO DESCAFEINADO", family: "CAFÉ", price: 0.45 },
+            { code: "7748.30", name: "RISTRETTO", family: "CAFÉ", price: 0.44 },
+            { code: "CHMAUA", name: "CHOCOLATE PERSONALIZADO CJ", family: "SNACKS", price: 1.8 },
+            { code: "GOM001", name: "GOMINOLA OSITOS HARIBO", family: "GENERAL", price: 0.52 },
+            { code: "PRI001", name: "PRINGLES 40 GR", family: "GENERAL", price: 0.69 },
+            { code: "KIT001", name: "KIT KAT", family: "GENERAL", price: 0.68 },
+            { code: "20Y", name: "TARRO 60GR ALMENDRAS CON HIERBAS MEDITERRANEAS 24UD CJ", family: "SNACKS", price: 3.45 },
+            { code: "7L", name: "TARRO 60GR ALMENDRAS TOSTADAS 24 UD CJ", family: "SNACKS", price: 3.45 },
+            { code: "FTB15B24", name: "FEVER TREE GINGER BEER", family: "REFRESCO", price: 1.45 },
+            { code: "0191", name: "LIMONADA PUIG 0,2L NO RET 24UD", family: "REFRESCO", price: 0.69 },
+            { code: "0192", name: "TONICA MARINA PUIG 0,2L NO RET 24UD", family: "REFRESCO", price: 0.74 },
+            { code: "0193", name: "TARONJADA PUIG 0,2L NO RET 24UD", family: "REFRESCO", price: 0.69 },
+            { code: "0194", name: "COLA PUIG 0,2L NO RET 24UD", family: "REFRESCO", price: 0.69 },
+            { code: "0195", name: "PINYA PUIG 33CL NO RET 24UD", family: "REFRESCO", price: 0.76 },
+            { code: "GIN002", name: "GIN BERGAMOTA CJ 25 UD 100 ML", family: "GIN", price: 6.44 },
+            { code: "200622", name: "GIN CABRABOC MALLORCA", family: "GIN", price: 18.95 },
+            { code: "GIN003", name: "GIN VERMELL CJ 25 UD 100 ML", family: "GIN", price: 6.44 },
+            { code: "PAT001", name: "PATATILAS MEDITERR´NAEAS FLOR DE SAL 22 UD", family: "SNACKS", price: 0.84 },
+            { code: "CAF001", name: "CAFÉ MUTANTE INTENSI 1KG", family: "GENERAL", price: 18.4 },
+            { code: "INF001", name: "INFUSION MANZANILLA PIRAMIDE", family: "GENERAL", price: 0.4 },
+            { code: "INF002", name: "INFUSION FRUTOS DEL BOQUE PIRAMIDE", family: "GENERAL", price: 0.4 },
+            { code: "INF003", name: "INFUSION TE VERDE PIRAMIDE", family: "GENERAL", price: 0.4 },
+            { code: "INF004", name: "INFUSION TE NEGRO PIRAMIDE", family: "GENERAL", price: 0.4 },
+            { code: "CAF002", name: "CAFÉ DESCAFEINADO MUTANTE DECAFEINADO CAPSULAS", family: "GENERAL", price: 0.41 },
+            { code: "EDUL01", name: "EDULCORANTE", family: "GENERAL", price: 0.33 },
+            { code: "AZU001", name: "AZUCAR MORENO", family: "GENERAL", price: 0.026 },
+            { code: "AZU002", name: "AZUCAR BLANCA SOBRE", family: "GENERAL", price: 0.026 },
+            { code: "LEC001", name: "LECHE ENTERA", family: "GENERAL", price: 1.201 },
+            { code: "LEC002", name: "SIN LACTOSA", family: "GENERAL", price: 1.424 },
+            { code: "LEC003", name: "LECHE SOJA", family: "GENERAL", price: 1.46 },
+            { code: "LEC004", name: "AVENA", family: "GENERAL", price: 1.607 },
+            { code: "LEC005", name: "ALMENDRA", family: "GENERAL", price: 1.598 },
+            { code: "KET001", name: "KETCHUP", family: "GENERAL", price: 0.58 },
+            { code: "MOS001", name: "MOSTAZA", family: "GENERAL", price: 0.65 },
+            { code: "MAY001", name: "MAYONESA", family: "GENERAL", price: 0.64 },
+            { code: "LEA001", name: "SALSA LEA PERRINS", family: "GENERAL", price: 2.39 },
+            { code: "TAB001", name: "TABASCO", family: "GENERAL", price: 1.45 },
+            { code: "MB001", name: "PRINGLES ORIGINAL", family: "MINIBAR", price: 0.69 },
+            { code: "MB002", name: "KIT KAT", family: "MINIBAR", price: 0.689 },
+            { code: "MB003", name: "HARIBO", family: "MINIBAR", price: 0.527 },
+            { code: "MB004", name: "CAPSULAS DE CAFÉ", family: "MINIBAR", price: 0.48 },
+            { code: "MB005", name: "CAPSULAS DE CAFÉ DESC.", family: "MINIBAR", price: 0.45 },
+            { code: "MB006", name: "RED BULL COCO", family: "MINIBAR", price: 1.12 },
+            { code: "MB007", name: "RED BULL", family: "MINIBAR", price: 1.115 },
+            { code: "MB008", name: "COKE", family: "MINIBAR", price: 0.793 },
+            { code: "MB009", name: "COKE ZERO", family: "MINIBAR", price: 0.793 },
+            { code: "MB010", name: "F. LIMON", family: "MINIBAR", price: 0.738 },
+            { code: "MB011", name: "F. NARANJA", family: "MINIBAR", price: 0.738 },
+            { code: "MB012", name: "VINO BATIBALAUSI BLANCO 750ML", family: "MINIBAR", price: 7.81 },
+            { code: "MB013", name: "CAVA JUVÉ & CAMPS 350ML", family: "MINIBAR", price: 7.0 },
+            { code: "MB014", name: "CERVEZA ROSA BLANCA", family: "MINIBAR", price: 0.76 },
+            { code: "MB015", name: "AGUA FONT MAJOR C/GAS", family: "MINIBAR", price: 0.33 },
+            { code: "MB016", name: "AGUA FONT MAJOR S/GAS", family: "MINIBAR", price: 0.29 },
+            { code: "3903-1", name: "RBLISS SIG TON WTR VR20 C24", family: "REFRESCO", price: 1.33 },
+            { code: "3906-1", name: "RBLISS LEM MIXER VR20 C24 HT", family: "REFRESCO", price: 1.33 },
+            { code: "NES001", name: "NESTEA CJ 24 UD", family: "REFRESCO", price: 0.97 },
+            { code: "200170", name: "COGNAC REMY MARTIN VSOP", family: "BRANDY", price: 21.0 },
+            { code: "PAL001", name: "PALO", family: "LICOR", price: 13.1 },
+            { code: "HAA001", name: "HELADO HAAGEN D", family: "COCINA", price: 1.9 }
+        ];
+
+        // State Variables
+        let catalog = [];
+        let recipes = [];
+        let currentRecipeId = null;
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            loadState();
+            renderCatalogFamilyFilter();
+            renderCatalogTable();
+            renderRecipeList();
+            
+            // Auto select first recipe if available
+            if (recipes.length > 0) {
+                selectRecipe(recipes[0].id);
+            }
+        });
+
+        // =========================================================================
+        // LOCALSTORAGE MANAGEMENT
+        // =========================================================================
+        function loadState() {
+            const savedCatalog = localStorage.getItem('escandallo_catalog');
+            const savedRecipes = localStorage.getItem('escandallo_recipes');
+
+            catalog = savedCatalog ? JSON.parse(savedCatalog) : [...DEFAULT_CATALOG];
+            recipes = savedRecipes ? JSON.parse(savedRecipes) : getSampleRecipes();
+
+            document.getElementById('cat-count').innerText = catalog.length;
+        }
+
+        function saveCatalogState() {
+            localStorage.setItem('escandallo_catalog', JSON.stringify(catalog));
+            document.getElementById('cat-count').innerText = catalog.length;
+            renderCatalogFamilyFilter();
+            renderCatalogTable();
+        }
+
+        function saveRecipeState() {
+            localStorage.setItem('escandallo_recipes', JSON.stringify(recipes));
+            renderRecipeList();
+        }
+
+        function resetCatalogToDefault() {
+            if (confirm("¿Estás seguro de restablecer el catálogo al estado predeterminado (257 artículos)? Se perderán cambios manuales.")) {
+                catalog = [...DEFAULT_CATALOG];
+                saveCatalogState();
+            }
+        }
+
+        function getSampleRecipes() {
+            return [
+                {
+                    id: "rec-1",
+                    name: "Gin Tonic Hendrick's",
+                    category: "Cóctel",
+                    pvp: 12.00,
+                    vat: 10,
+                    ingredients: [
+                        { catalogCode: "00048013", name: "GIN HENDRICK'S 70 CL", quantity: 0.07, unitCost: 25.35 }, // ~5cl
+                        { catalogCode: "FT115B24", name: "FEVER TREE TONIC", quantity: 1, unitCost: 1.39 }
+                    ]
+                }
+            ];
+        }
+
+        // =========================================================================
+        // NAVIGATION & TABS
+        // =========================================================================
+        function switchTab(tab) {
+            const vRecetas = document.getElementById('view-recetas');
+            const vCatalogo = document.getElementById('view-catalogo');
+            const tabRecetas = document.getElementById('tab-recetas');
+            const tabCatalogo = document.getElementById('tab-catalogo');
+
+            if (tab === 'recetas') {
+                vRecetas.classList.remove('hidden');
+                vCatalogo.classList.add('hidden');
+                tabRecetas.className = "tab-active py-4 px-1 inline-flex items-center gap-2 text-sm font-medium";
+                tabCatalogo.className = "text-slate-500 hover:text-slate-700 py-4 px-1 inline-flex items-center gap-2 text-sm font-medium";
+            } else {
+                vRecetas.classList.add('hidden');
+                vCatalogo.classList.remove('hidden');
+                tabCatalogo.className = "tab-active py-4 px-1 inline-flex items-center gap-2 text-sm font-medium";
+                tabRecetas.className = "text-slate-500 hover:text-slate-700 py-4 px-1 inline-flex items-center gap-2 text-sm font-medium";
+            }
+        }
+
+        // =========================================================================
+        // CATALOG FUNCTIONS (TAB 2)
+        // =========================================================================
+        function renderCatalogFamilyFilter() {
+            const select = document.getElementById('catalog-family-filter');
+            const datalist = document.getElementById('families-list');
+            const families = Array.from(new Set(catalog.map(i => i.family))).sort();
+
+            select.innerHTML = `<option value="ALL">Todas las Familias</option>` + 
+                families.map(f => `<option value="${f}">${f}</option>`).join('');
+
+            datalist.innerHTML = families.map(f => `<option value="${f}">`).join('');
+        }
+
+        function renderCatalogTable() {
+            const tbody = document.getElementById('catalog-table-body');
+            const search = document.getElementById('catalog-search').value.toLowerCase().trim();
+            const familyFilter = document.getElementById('catalog-family-filter').value;
+
+            const filtered = catalog.filter(item => {
+                const matchSearch = item.name.toLowerCase().includes(search) || (item.code && item.code.toLowerCase().includes(search));
+                const matchFamily = familyFilter === 'ALL' || item.family === familyFilter;
+                return matchSearch && matchFamily;
+            });
+
+            document.getElementById('catalog-counter-text').innerText = `Mostrando ${filtered.length} de ${catalog.length} productos`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No se encontraron productos en el catálogo.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, idx) => {
+                const originalIndex = catalog.indexOf(item);
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-2.5 px-4 font-mono text-xs text-slate-500">${item.code || '-'}</td>
+                        <td class="py-2.5 px-4 font-medium text-slate-900">${item.name}</td>
+                        <td class="py-2.5 px-4"><span class="inline-block bg-slate-100 text-slate-600 text-[11px] px-2 py-0.5 rounded-full">${item.family}</span></td>
+                        <td class="py-2.5 px-4 text-right font-semibold">€${Number(item.price).toFixed(2)}</td>
+                        <td class="py-2.5 px-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="openEditCatalogModal(${originalIndex})" class="p-1 text-slate-400 hover:text-blue-600 rounded"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                <button onclick="deleteCatalogItem(${originalIndex})" class="p-1 text-slate-400 hover:text-rose-600 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function openAddCatalogModal() {
+            document.getElementById('modal-catalog-title').innerText = "Añadir Producto al Catálogo";
+            document.getElementById('cat-item-index').value = "-1";
+            document.getElementById('cat-item-code').value = "";
+            document.getElementById('cat-item-name').value = "";
+            document.getElementById('cat-item-family').value = "GENERAL";
+            document.getElementById('cat-item-price').value = "";
+            document.getElementById('modal-catalog-item').classList.remove('hidden');
+        }
+
+        function openEditCatalogModal(index) {
+            const item = catalog[index];
+            document.getElementById('modal-catalog-title').innerText = "Editar Producto del Catálogo";
+            document.getElementById('cat-item-index').value = index;
+            document.getElementById('cat-item-code').value = item.code || "";
+            document.getElementById('cat-item-name').value = item.name;
+            document.getElementById('cat-item-family').value = item.family;
+            document.getElementById('cat-item-price').value = item.price;
+            document.getElementById('modal-catalog-item').classList.remove('hidden');
+        }
+
+        function saveCatalogItem(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('cat-item-index').value);
+            const newItem = {
+                code: document.getElementById('cat-item-code').value.trim(),
+                name: document.getElementById('cat-item-name').value.trim(),
+                family: document.getElementById('cat-item-family').value.trim().toUpperCase() || "GENERAL",
+                price: parseFloat(document.getElementById('cat-item-price').value) || 0
+            };
+
+            if (idx === -1) {
+                catalog.push(newItem);
+            } else {
+                catalog[idx] = newItem;
+            }
+
+            saveCatalogState();
+            closeModal('modal-catalog-item');
+        }
+
+        function deleteCatalogItem(index) {
+            if (confirm(`¿Eliminar "${catalog[index].name}" del catálogo?`)) {
+                catalog.splice(index, 1);
+                saveCatalogState();
+            }
+        }
+
+        function exportCatalogToExcel() {
+            const ws = XLSX.utils.json_to_sheet(catalog.map(i => ({
+                'CÓDIGO': i.code,
+                'PRODUCTO': i.name,
+                'FAMILIA': i.family,
+                'PRECIO UNIDAD (€)': i.price
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Catálogo Base");
+            XLSX.writeFile(wb, "Catalogo_257_Productos.xlsx");
+        }
+
+        // =========================================================================
+        // RECIPE & ESCANDALLO FUNCTIONS (TAB 1)
+        // =========================================================================
+        function renderRecipeList() {
+            const container = document.getElementById('recipe-list');
+            const search = document.getElementById('recipe-search').value.toLowerCase().trim();
+
+            const filtered = recipes.filter(r => r.name.toLowerCase().includes(search) || r.category.toLowerCase().includes(search));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">No hay escandallos guardados</p>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(r => {
+                const totalCost = r.ingredients.reduce((acc, ing) => acc + (ing.quantity * ing.unitCost), 0);
+                const isSelected = r.id === currentRecipeId;
+                return `
+                    <div onclick="selectRecipe('${r.id}')" class="p-3 rounded-lg border cursor-pointer transition ${isSelected ? 'bg-blue-50 border-blue-300' : 'bg-white border-slate-100 hover:border-slate-200'}">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-semibold text-sm text-slate-800 leading-snug">${r.name || 'Sin nombre'}</h4>
+                            <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${r.category}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-slate-500">
+                            <span>Coste: <strong class="text-slate-700">€${totalCost.toFixed(2)}</strong></span>
+                            <span>PVP: <strong class="text-slate-700">€${Number(r.pvp || 0).toFixed(2)}</strong></span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createNewRecipe() {
+            const newRec = {
+                id: 'rec-' + Date.now(),
+                name: 'Nuevo Escandallo',
+                category: 'Cóctel',
+                pvp: 10.00,
+                vat: 10,
+                ingredients: []
+            };
+            recipes.push(newRec);
+            saveRecipeState();
+            selectRecipe(newRec.id);
+        }
+
+        function selectRecipe(id) {
+            currentRecipeId = id;
+            const recipe = recipes.find(r => r.id === id);
+
+            if (!recipe) {
+                document.getElementById('editor-empty').classList.remove('hidden');
+                document.getElementById('editor-content').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('editor-empty').classList.add('hidden');
+            document.getElementById('editor-content').classList.remove('hidden');
+
+            document.getElementById('recipe-name').value = recipe.name;
+            document.getElementById('recipe-category').value = recipe.category;
+            document.getElementById('recipe-pvp').value = recipe.pvp;
+            document.getElementById('recipe-vat').value = recipe.vat;
+
+            renderRecipeIngredients();
+            calculateRecipeTotals();
+            renderRecipeList();
+        }
+
+        function updateCurrentRecipeHeader() {
+            const recipe = recipes.find(r => r.id === currentRecipeId);
+            if (!recipe) return;
+
+            recipe.name = document.getElementById('recipe-name').value;
+            recipe.category = document.getElementById('recipe-category').value;
+            saveRecipeState();
+        }
+
+        function renderRecipeIngredients() {
+            const recipe = recipes.find(r => r.id === currentRecipeId);
+            const tbody = document.getElementById('recipe-ingredients-body');
+
+            if (!recipe || recipe.ingredients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400 text-xs">Sin ingredientes. Pulsa "Añadir del Catálogo" para incluir insumos.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = recipe.ingredients.map((ing, idx) => {
+                const rowTotal = ing.quantity * ing.unitCost;
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-2 px-3 font-medium text-slate-800">${ing.name}</td>
+                        <td class="py-2 px-3 text-right">
+                            <input type="number" step="0.001" min="0" value="${ing.quantity}" onchange="updateIngredientQuantity(${idx}, this.value)" class="w-20 text-right border border-slate-200 rounded px-1.5 py-0.5 text-sm focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="py-2 px-3 text-right text-xs text-slate-500">€${Number(ing.unitCost).toFixed(2)}</td>
+                        <td class="py-2 px-3 text-right font-semibold text-slate-900">€${rowTotal.toFixed(2)}</td>
+                        <td class="py-2 px-3 text-center no-print">
+                            <button onclick="removeIngredient(${idx})" class="text-slate-400 hover:text-rose-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function updateIngredientQuantity(index, val) {
+            const recipe = recipes.find(r => r.id === currentRecipeId);
+            if (!recipe) return;
+            recipe.ingredients[index].quantity = parseFloat(val) || 0;
+            saveRecipeState();
+            renderRecipeIngredients();
+            calculateRecipeTotals();
+        }
+
+        function removeIngredient(index) {
+            const recipe = recipes.find(r => r.id === currentRecipeId);
+            if (!recipe) return;
+            recipe.ingredients.splice(index, 1);
+            saveRecipeState();
+            renderRecipeIngredients();
+            calculateRecipeTotals();
+        }
+
+        function calculateRecipeTotals() {
+            const recipe = recipes.find(r => r.id === currentRecipeId);
+            if (!recipe) return;
+
+            recipe.pvp = parseFloat(document.getElementById('recipe-pvp').value) || 0;
+            recipe.vat = parseFloat(document.getElementById('recipe-vat').value) || 0;
+
+            const costTotal = recipe.ingredients.reduce((acc, ing) => acc + (ing.quantity * ing.unitCost), 0);
+            const netSalesPrice = recipe.pvp / (1 + (recipe.vat / 100));
+            const marginNet = netSalesPrice - costTotal;
+            const foodCostPercent = netSalesPrice > 0 ? (costTotal / netSalesPrice) * 100 : 0;
+
+            document.getElementById('calc-cost-total').innerText = `€${costTotal.toFixed(2)}`;
+            document.getElementById('calc-food-cost').innerText = `${foodCostPercent.toFixed(1)}%`;
+            document.getElementById('calc-margin-net').innerText = `Margen: €${marginNet.toFixed(2)}`;
+
+            saveRecipeState();
+        }
+
+        function deleteCurrentRecipe() {
+            if (confirm("¿Eliminar este escandallo definitivamente?")) {
+                recipes = recipes.filter(r => r.id !== currentRecipeId);
+                currentRecipeId = recipes.length > 0 ? recipes[0].id : null;
+                saveRecipeState();
+                if (currentRecipeId) selectRecipe(currentRecipeId);
+                else {
+                    document.getElementById('editor-empty').classList.remove('hidden');
+                    document.getElementById('editor-content').classList.add('hidden');
+                }
+            }
+        }
+
+        // =========================================================================
+        // MODAL SELECT INGREDIENT FROM CATALOG
+        // =========================================================================
+        function openAddIngredientModal() {
+            document.getElementById('modal-search-ingredient').value = "";
+            renderModalIngredientList();
+            document.getElementById('modal-select-ingredient').classList.remove('hidden');
+        }
+
+        function renderModalIngredientList() {
+            const container = document.getElementById('modal-ingredient-list');
+            const search = document.getElementById('modal-search-ingredient').value.toLowerCase().trim();
+
+            const filtered = catalog.filter(i => i.name.toLowerCase().includes(search) || (i.code && i.code.toLowerCase().includes(search)));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 p-4 text-center">No se encontraron coincidencia en los 257 artículos</p>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(i => `
+                <div onclick="addIngredientToRecipe('${i.code}', '${i.name.replace(/'/g, "\\'")}', ${i.price})" class="p-2.5 hover:bg-blue-50/60 rounded-lg cursor-pointer flex justify-between items-center transition">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-800">${i.name}</p>
+                        <span class="text-[10px] text-slate-400 font-mono">${i.code || '-'} | ${i.family}</span>
+                    </div>
+                    <span class="text-xs font-bold text-slate-700">€${Number(i.price).toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        function addIngredientToRecipe(code, name, price) {
+            const recipe = recipes.find(r => r.id === currentRecipeId);
+            if (!recipe) return;
+
+            recipe.ingredients.push({
+                catalogCode: code,
+                name: name,
+                quantity: 1,
+                unitCost: price
+            });
+
+            saveRecipeState();
+            renderRecipeIngredients();
+            calculateRecipeTotals();
+            closeModal('modal-select-ingredient');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // =========================================================================
+        // IMPORT / EXPORT ENTIRE DATA (BACKUP JSON)
+        // =========================================================================
+        function exportAllData() {
+            const data = { catalog, recipes };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `EscandalloPro_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+        }
+
+        function importAllData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (imported.catalog && imported.recipes) {
+                        catalog = imported.catalog;
+                        recipes = imported.recipes;
+                        saveCatalogState();
+                        saveRecipeState();
+                        alert("Datos cargados con éxito.");
+                    } else {
+                        alert("El archivo subido no tiene un formato válido.");
+                    }
+                } catch (err) {
+                    alert("Error al procesar el archivo JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function printRecipe() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
