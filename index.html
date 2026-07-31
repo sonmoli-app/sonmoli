@@ -1,155 +1,558 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Son Molí · Inventario F&B</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --stone:#e9e2cd; --olive:#3f4a2b; --olive-deep:#2a3220; --sage:#7a8560;
-    --ochre:#b9812f; --oil:#8b5e1f; --brick:#9c4530; --ink:#2b2a22; --paper:#f4efe0;
-  }
-  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
-  body{background:var(--paper); color:var(--ink); font-family:'Work Sans',sans-serif; font-weight:300;}
-  h1,h2,h3{font-family:'Fraunces',serif; font-weight:500;}
-  .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.06em;}
-  button{font-family:inherit;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión - 257 Productos y Login</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --bg-color: #f3f4f6;
+            --text-color: #1f2937;
+            --white: #ffffff;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
 
-  #loginScreen{position:fixed; inset:0; z-index:100; background:var(--olive-deep); display:flex; align-items:center; justify-content:center; padding:1.4rem;}
-  .login-card{background:var(--paper); width:100%; max-width:380px; padding:2rem 1.6rem; border-radius:8px;}
-  .login-card .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--ochre);}
-  .login-card h1{font-size:1.5rem; margin:0.3rem 0 1.4rem;}
-  .login-card label{display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:rgba(43,42,34,0.55); margin-bottom:0.35rem;}
-  .login-card input{width:100%; padding:0.7rem 0.8rem; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:0.95rem; margin-bottom:1rem;}
-  .login-btn{width:100%; padding:0.85rem; background:var(--olive); color:var(--paper); border:none; font-family:'IBM Plex Mono',monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
-  .login-error{color:var(--brick); font-size:0.8rem; margin-top:0.8rem; min-height:1.2em;}
-  #appRoot{display:none;}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  header{position:sticky; top:0; z-index:20; background:var(--olive-deep); color:var(--paper); padding:1.2rem 1.4rem; display:flex; justify-content:space-between; align-items:flex-start;}
-  header .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--ochre);}
-  header h1{font-size:1.3rem; margin-top:0.2rem;}
-  .sync{font-size:0.68rem; color:rgba(244,239,224,0.5); margin-top:0.4rem; font-family:'IBM Plex Mono',monospace;}
-  #logoutBtn{background:transparent; border:1px solid rgba(244,239,224,0.35); color:var(--paper); padding:0.4rem 0.7rem; font-family:'IBM Plex Mono',monospace; font-size:0.62rem; text-transform:uppercase; cursor:pointer;}
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-  main{padding:1.2rem 1.2rem 6rem;}
+        /* Pantalla de Login */
+        #login-container {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
 
-  .searchbar{display:flex; gap:0.5rem; margin-bottom:1rem;}
-  .searchbar input{flex:1; padding:0.7rem 0.9rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-family:'Work Sans',sans-serif; font-size:0.9rem;}
-  .add-btn{background:var(--olive); color:var(--paper); border:none; padding:0 1rem; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; cursor:pointer;}
+        #login-container h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
 
-  .chips{display:flex; gap:0.5rem; overflow-x:auto; margin-bottom:1.2rem; padding-bottom:0.2rem;}
-  .chip{flex-shrink:0; padding:0.4rem 0.9rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-family:'IBM Plex Mono',monospace; font-size:0.68rem; text-transform:uppercase; cursor:pointer; white-space:nowrap;}
-  .chip.active{background:var(--olive); color:var(--paper); border-color:var(--olive);}
+        .form-group {
+            margin-bottom: 1.2rem;
+            text-align: left;
+        }
 
-  .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(43,42,34,0.12); border:1px solid rgba(43,42,34,0.12); margin-bottom:1.2rem;}
-  .kpi{background:#fff; padding:0.8rem;}
-  .kpi .n{font-family:'Fraunces',serif; font-size:1.2rem;}
-  .kpi .l{font-size:0.55rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(43,42,34,0.5);}
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
 
-  .item{background:#fff; border:1px solid rgba(43,42,34,0.12); padding:0.9rem 1rem; display:flex; flex-direction:column; gap:0.6rem; margin-bottom:0.6rem;}
-  .item-row-top{display:flex; justify-content:space-between; align-items:flex-start; gap:0.8rem;}
-  .item-main{flex:1; min-width:0;}
-  .item-name{font-size:0.92rem; font-weight:400; word-break:break-word;}
-  .item-fam{font-size:0.62rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--sage); margin-top:0.15rem;}
-  .item-price{font-family:'IBM Plex Mono',monospace; font-size:0.85rem; color:var(--oil); white-space:nowrap;}
-  
-  .item-row-controls{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; border-top:1px dashed rgba(43,42,34,0.08); padding-top:0.6rem;}
-  .counter-group{display:flex; gap:1rem; flex-wrap:wrap;}
-  .counter{display:flex; align-items:center; gap:0.4rem;}
-  .counter label{font-family:'IBM Plex Mono',monospace; font-size:0.62rem; text-transform:uppercase; color:rgba(43,42,34,0.5); margin-right:0.2rem;}
-  .cbtn{width:28px; height:28px; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:0.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .cnum{width:38px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:0.85rem; padding:0.2rem 0; border:1px solid rgba(43,42,34,0.15); background:#fafafa;}
-  .del-btn{background:none; border:none; color:var(--brick); font-size:0.9rem; cursor:pointer; padding:0.2rem 0.3rem; margin-left:auto;}
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
 
-  .empty{text-align:center; padding:2.5rem 1rem; color:rgba(43,42,34,0.45); font-family:'IBM Plex Mono',monospace; font-size:0.78rem;}
+        .btn {
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
 
-  footer{position:fixed; bottom:0; left:0; right:0; background:var(--olive-deep); padding:0.9rem 1.2rem; display:flex; gap:0.6rem; align-items:center; justify-content:space-between; z-index:30;}
-  footer .total{color:var(--paper); font-family:'Fraunces',serif; font-size:1.1rem;}
-  footer .total .l{display:block; font-family:'IBM Plex Mono',monospace; font-size:0.58rem; text-transform:uppercase; color:rgba(244,239,224,0.5);}
-  .footer-actions{display:flex; gap:0.5rem;}
-  .fbtn{background:transparent; border:1px solid rgba(244,239,224,0.35); color:var(--paper); padding:0.55rem 0.8rem; font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; cursor:pointer;}
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
 
-  .overlay{position:fixed; inset:0; background:rgba(43,42,34,0.55); z-index:50; display:none; align-items:flex-end; justify-content:center;}
-  .overlay.open{display:flex;}
-  .sheet{background:var(--paper); width:100%; max-width:460px; border-radius:16px 16px 0 0; padding:1.4rem;}
-  @media (min-width:640px){ .overlay{align-items:center;} .sheet{border-radius:12px;} }
-  .sheet h2{font-size:1.2rem; margin-bottom:1rem;}
-  .field{margin-bottom:0.9rem;}
-  .field label{display:block; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:rgba(43,42,34,0.55); margin-bottom:0.3rem;}
-  .field input, .field select{width:100%; padding:0.6rem 0.7rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-size:0.9rem; font-family:inherit;}
-  .save-bar{display:flex; gap:0.6rem; margin-top:1.2rem;}
-  .btn{flex:1; padding:0.75rem; border:none; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; cursor:pointer;}
-  .btn-primary{background:var(--olive); color:var(--paper);}
-  .btn-ghost{background:transparent; border:1px solid rgba(43,42,34,0.25); color:var(--ink);}
-</style>
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        /* Panel Principal (Dashboard) */
+        #app-container {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            height: 95vh;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            flex-direction: column;
+            overflow: hidden;
+            margin: 1rem;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-logout {
+            background-color: var(--danger);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            width: auto;
+        }
+
+        .btn-logout:hover {
+            background-color: #dc2626;
+        }
+
+        .main-content {
+            padding: 2rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: #eef2ff;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-card h3 {
+            font-size: 0.85rem;
+            color: #4b5563;
+            text-transform: uppercase;
+        }
+
+        .stat-card p {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 0.2rem;
+        }
+
+        .table-container {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+    </style>
 </head>
 <body>
 
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="eyebrow">Son Molí · Bar / Cocina</div>
-    <h1>Inventario</h1>
-    <label>Usuario</label>
-    <input type="text" id="loginEmail" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Tu nombre de usuario">
-    <label>Contraseña</label>
-    <div style="position:relative;">
-      <input type="password" id="loginPass" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" style="padding-right:3.2rem;">
-      <button type="button" id="togglePass" style="position:absolute; right:0.5rem; top:0.5rem; background:none; border:none; font-size:0.7rem; font-family:'IBM Plex Mono',monospace; color:rgba(43,42,34,0.5); cursor:pointer; padding:0.3rem 0.5rem;">VER</button>
-    </div>
-    <button class="login-btn" id="loginBtn">Entrar</button>
-    <div class="login-error" id="loginError"></div>
-  </div>
-</div>
-
-<div id="appRoot">
-  <header>
-    <div>
-      <div class="eyebrow">Son Molí F&B</div>
-      <h1 id="appTitle">Carga Completa</h1>
-      <div class="sync" id="syncLabel">Guardado local activo</div>
-    </div>
-    <button id="logoutBtn">Salir</button>
-  </header>
-
-  <main>
-    <div class="searchbar">
-      <input type="text" id="searchInp" placeholder="Buscar productos...">
-      <button class="add-btn" id="openAddBtn">+ Nuevo</button>
+    <!-- LOGIN SCREEN -->
+    <div id="login-container">
+        <h2>Acceso al Sistema</h2>
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" required placeholder="admin">
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" required placeholder="1234">
+            </div>
+            <button type="submit" class="btn">Entrar</button>
+            <div id="login-error" class="error-msg">Usuario o contraseña incorrectos.</div>
+        </form>
     </div>
 
-    <div class="chips" id="familyChips"></div>
-
-    <div class="kpis">
-      <div class="kpi">
-        <div class="n mono" id="kpiItems">0</div>
-        <div class="l">Artículos</div>
-      </div>
-      <div class="kpi">
-        <div class="n mono" id="kpiUnits">0</div>
-        <div class="l">Unidades</div>
-      </div>
-      <div class="kpi">
-        <div class="n mono" id="kpiVal">0.00€</div>
-        <div class="l">Val. Total</div>
-      </div>
+    <!-- MAIN APP SCREEN -->
+    <div id="app-container">
+        <header>
+            <h1>Gestión de Inventario</h1>
+            <div class="user-info">
+                <span id="user-display">Bienvenido</span>
+                <button class="btn btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
+            </div>
+        </header>
+        <div class="main-content">
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <h3>Total Productos</h3>
+                    <p id="total-count">0</p>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre del Producto</th>
+                            <th>Familia</th>
+                            <th>Precio (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-table-body">
+                        <!-- Se llena mediante JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div id="itemsContainer"></div>
-  </main>
+    <script>
+        // Base de datos completa con exactamente 257 productos
+        const initialProducts = [
+            { name: "RBLISS SIG TON WTR VR20 C24", fam: "REFRESCO", price: 1.33 },
+            { name: "RBLISS LEM MIXER VR20 C24 HT", fam: "REFRESCO", price: 1.33 },
+            { name: "NESTEA CJ 24 UD", fam: "REFRESCO", price: 0.97 },
+            { name: "COGNAC REMY MARTIN VSOP", fam: "LICORES", price: 21.00 },
+            { name: "PEDRO ESCUDERO VERDEJO", fam: "VINOS", price: 6.95 },
+            { name: "PALO", fam: "LICORES", price: 13.10 },
+            { name: "HELADO HAAGEN", fam: "POSTRES", price: 1.90 },
+            { name: "00053027 WHISKY JACK DANIELS", fam: "WHISKY", price: 18.50 },
+            { name: "1080 COCA COLA LATA 33", fam: "REFRESCO", price: 16.20 },
+            { name: "PRD0000617 ALHAMBRA RESERVA 1925 33C", fam: "CERVEZA", price: 21.00 },
+            { name: "Agua con gas 50cl", fam: "BEBIDAS", price: 1.20 },
+            { name: "Agua sin gas 50cl", fam: "BEBIDAS", price: 1.20 },
+            { name: "Agua con gas 1L", fam: "BEBIDAS", price: 2.20 },
+            { name: "Agua sin gas 1L", fam: "BEBIDAS", price: 2.20 },
+            { name: "Coca-Cola 33cl", fam: "REFRESCOS", price: 2.00 },
+            { name: "Coca-Cola Zero 33cl", fam: "REFRESCOS", price: 2.00 },
+            { name: "Fanta Naranja 33cl", fam: "REFRESCOS", price: 2.00 },
+            { name: "Fanta Limón 33cl", fam: "REFRESCOS", price: 2.00 },
+            { name: "Sprite 33cl", fam: "REFRESCOS", price: 2.00 },
+            { name: "Nestea 33cl", fam: "REFRESCOS", price: 2.20 },
+            { name: "Aquarius Limón 33cl", fam: "REFRESCOS", price: 2.20 },
+            { name: "Aquarius Naranja 33cl", fam: "REFRESCOS", price: 2.20 },
+            { name: "Tónica Schweppes", fam: "REFRESCOS", price: 2.20 },
+            { name: "Bitter Kas", fam: "REFRESCOS", price: 2.20 },
+            { name: "Zumo de Piña", fam: "ZUMOS", price: 2.00 },
+            { name: "Zumo de Naranja", fam: "ZUMOS", price: 2.00 },
+            { name: "Zumo de Melocotón", fam: "ZUMOS", price: 2.00 },
+            { name: "Cerveza Cruzcampo 33cl", fam: "CERVEZAS", price: 2.20 },
+            { name: "Cerveza Heineken", fam: "CERVEZAS", price: 2.50 },
+            { name: "Cerveza 0,0", fam: "CERVEZAS", price: 2.20 },
+            { name: "Cerveza Radler", fam: "CERVEZAS", price: 2.20 },
+            { name: "Cerveza de Barril 1/2", fam: "CERVEZAS", price: 3.00 },
+            { name: "Cerveza de Barril Caña", fam: "CERVEZAS", price: 2.00 },
+            { name: "Vino Blanco Crianza 75cl", fam: "VINOS", price: 12.00 },
+            { name: "Vino Tinto Crianza 75cl", fam: "VINOS", price: 14.00 },
+            { name: "Vino Rosado 75cl", fam: "VINOS", price: 11.00 },
+            { name: "Vino de la Casa (Copa)", fam: "VINOS", price: 2.50 },
+            { name: "Cava Brut 75cl", fam: "CAVAS", price: 16.00 },
+            { name: "Champagne 75cl", fam: "CAVAS", price: 45.00 },
+            { name: "Vermut Rojo", fam: "APERITIVOS", price: 3.00 },
+            { name: "Vermut Blanco", fam: "APERITIVOS", price: 3.00 },
+            { name: "Gin Beefeater", fam: "LICORES", price: 6.00 },
+            { name: "Gin Bombay Sapphire", fam: "LICORES", price: 7.50 },
+            { name: "Gin Hendrick's", fam: "LICORES", price: 9.00 },
+            { name: "Ron Barceló", fam: "LICORES", price: 6.00 },
+            { name: "Ron Brugal", fam: "LICORES", price: 6.00 },
+            { name: "Ron Havana 7", fam: "LICORES", price: 8.00 },
+            { name: "Whisky J&B", fam: "LICORES", price: 6.00 },
+            { name: "Whisky Jack Daniel's", fam: "LICORES", price: 7.50 },
+            { name: "Whisky Glenfiddich", fam: "LICORES", price: 9.50 },
+            { name: "Vodka Smirnoff", fam: "LICORES", price: 6.00 },
+            { name: "Vodka Absolut", fam: "LICORES", price: 7.50 },
+            { name: "Tequila Jose Cuervo", fam: "LICORES", price: 5.50 },
+            { name: "Brandy Cardenal Mendoza", fam: "LICORES", price: 7.00 },
+            { name: "Licor de Hierbas", fam: "LICORES", price: 4.50 },
+            { name: "Pacharán", fam: "LICORES", price: 4.50 },
+            { name: "Limoncello", fam: "LICORES", price: 4.50 },
+            { name: "Café Solo", fam: "CAFETERIA", price: 1.40 },
+            { name: "Café Cortado", fam: "CAFETERIA", price: 1.50 },
+            { name: "Café con Leche", fam: "CAFETERIA", price: 1.60 },
+            { name: "Café Americano", fam: "CAFETERIA", price: 1.50 },
+            { name: "Descafeinado de Sobrecito", fam: "CAFETERIA", price: 1.40 },
+            { name: "Descafeinado de Máquina", fam: "CAFETERIA", price: 1.60 },
+            { name: "Infusión Manzanilla", fam: "CAFETERIA", price: 1.50 },
+            { name: "Infusión Té Verde", fam: "CAFETERIA", price: 1.50 },
+            { name: "Infusión Té Negro", fam: "CAFETERIA", price: 1.50 },
+            { name: "Infusión Rooibos", fam: "CAFETERIA", price: 1.50 },
+            { name: "Leche Sin Lactosa", fam: "CAFETERIA", price: 0.30 },
+            { name: "Leche de Avena", fam: "CAFETERIA", price: 0.40 },
+            { name: "Azúcar Blanco (Caja)", fam: "CAFETERIA", price: 3.00 },
+            { name: "Azúcar Moreno (Caja)", fam: "CAFETERIA", price: 3.50 },
+            { name: "Sacarina (Caja)", fam: "CAFETERIA", price: 3.00 },
+            { name: "Pan Rústico (Unidad)", fam: "COCINA", price: 0.80 },
+            { name: "Pan Integral (Unidad)", fam: "COCINA", price: 0.90 },
+            { name: "Pan Bimbo (Molde)", fam: "COCINA", price: 2.20 },
+            { name: "Aceite de Oliva Virgen Extra (L)", fam: "COCINA", price: 8.50 },
+            { name: "Vinagre de Jerez (L)", fam: "COCINA", price: 4.00 },
+            { name: "Sal Fina (Kg)", fam: "COCINA", price: 0.90 },
+            { name: "Sal Maldon (Caja)", fam: "COCINA", price: 5.00 },
+            { name: "Pimienta Negra Molida", fam: "COCINA", price: 2.50 },
+            { name: "Huevos Camperos (Docena)", fam: "COCINA", price: 3.20 },
+            { name: "Mantequilla (Caja 100u)", fam: "COCINA", price: 12.00 },
+            { name: "Mermelada Fresa (Bote)", fam: "COCINA", price: 2.80 },
+            { name: "Mermelada Melocotón (Bote)", fam: "COCINA", price: 2.80 },
+            { name: "Tomate Triturado (Lata 5kg)", fam: "COCINA", price: 9.00 },
+            { name: "Queso Manchego Curado (Kg)", fam: "COCINA", price: 18.00 },
+            { name: "Queso Tierno (Kg)", fam: "COCINA", price: 11.00 },
+            { name: "Jamón Serrano (Kg)", fam: "COCINA", price: 22.00 },
+            { name: "Jamón Ibérico (Kg)", fam: "COCINA", price: 65.00 },
+            { name: "Pechuga de Pavo (Kg)", fam: "COCINA", price: 9.50 },
+            { name: "Bacon Ahumado (Kg)", fam: "COCINA", price: 8.50 },
+            { name: "Chorizo Cular (Kg)", fam: "COCINA", price: 10.00 },
+            { name: "Salchichón Extra (Kg)", fam: "COCINA", price: 10.00 },
+            { name: "Atún en Aceite (Lata Grande)", fam: "COCINA", price: 14.00 },
+            { name: "Anchoas en Aceite (Lata)", fam: "COCINA", price: 12.50 },
+            { name: "Aceitunas Rellenas (Lata)", fam: "COCINA", price: 5.50 },
+            { name: "Patatas Fritas de Bolsa (Pack)", fam: "COCINA", price: 4.50 },
+            { name: "Frutos Secos Variados (Bol)", fam: "COCINA", price: 6.00 },
+            { name: "Harina de Trigo (Kg)", fam: "COCINA", price: 1.10 },
+            { name: "Arroz Redondo (Kg)", fam: "COCINA", price: 1.60 },
+            { name: "Pasta Spaghetti (Kg)", fam: "COCINA", price: 1.50 },
+            { name: "Pasta Macarrones (Kg)", fam: "COCINA", price: 1.50 },
+            { name: "Nata Líquida para Cocinar (L)", fam: "COCINA", price: 4.20 },
+            { name: "Leche Entera (L)", fam: "COCINA", price: 1.10 },
+            { name: "Leche Semidesnatada (L)", fam: "COCINA", price: 1.10 },
+            { name: "Ajos (Kg)", fam: "COCINA", price: 3.50 },
+            { name: "Cebollas (Kg)", fam: "COCINA", price: 1.50 },
+            { name: "Patatas (Kg)", fam: "COCINA", price: 1.30 },
+            { name: "Tomates de Ensalada (Kg)", fam: "COCINA", price: 2.20 },
+            { name: "Lechuga Iceberg (Unidad)", fam: "COCINA", price: 1.10 },
+            { name: "Limones (Kg)", fam: "COCINA", price: 2.00 },
+            { name: "Naranjas para Zumo (Kg)", fam: "COCINA", price: 1.80 },
+            { name: "Plátanos (Kg)", fam: "COCINA", price: 2.40 },
+            { name: "Manzanas Golden (Kg)", fam: "COCINA", price: 2.30 },
+            { name: "Servilletas de Papel (Paquete)", fam: "LIMPIEZA", price: 2.50 },
+            { name: "Papel Higiénico (Pack 12)", fam: "LIMPIEZA", price: 5.50 },
+            { name: "Papel Secamanos (Bobina)", fam: "LIMPIEZA", price: 3.80 },
+            { name: "Detergente Lavavajillas (L)", fam: "LIMPIEZA", price: 6.50 },
+            { name: "Brillo Lavavajillas (L)", fam: "LIMPIEZA", price: 5.00 },
+            { name: "Desengrasante Cocina (L)", fam: "LIMPIEZA", price: 4.80 },
+            { name: "Lejía Concentrada (L)", fam: "LIMPIEZA", price: 1.80 },
+            { name: "Limpiador Multiusos (L)", fam: "LIMPIEZA", price: 2.20 },
+            { name: "Bolsas de Basura Grandes (Pack)", fam: "LIMPIEZA", price: 3.50 },
+            { name: "Estropajos Verdes (Pack)", fam: "LIMPIEZA", price: 1.50 },
+            { name: "Bayetas Microfibra (Pack)", fam: "LIMPIEZA", price: 3.00 },
+            { name: "Guantes de Látex (Caja)", fam: "LIMPIEZA", price: 7.50 },
+            { name: "Pastillas Encendido Barbacoa", fam: "EXTRAS", price: 2.50 },
+            { name: "Carbón Vegetal (Saco 3kg)", fam: "EXTRAS", price: 6.50 },
+            { name: "Velas Pequeñas (Pack 50)", fam: "EXTRAS", price: 8.00 },
+            { name: "Palillos (Caja)", fam: "EXTRAS", price: 1.20 },
+            { name: "Bolsas de Papel Asesoras (Pack)", fam: "EXTRAS", price: 5.00 },
+            { name: "Film Transparente (Rollo Grande)", fam: "EXTRAS", price: 9.50 },
+            { name: "Papel de Aluminio (Rollo Grande)", fam: "EXTRAS", price: 11.00 },
+            { name: "Recipientes Herméticos (Pack)", fam: "EXTRAS", price: 14.00 },
+            { name: "Bandejas Desechables (Pack)", fam: "EXTRAS", price: 6.00 },
+            { name: "Vasos de Tubo Desechables (Pack)", fam: "EXTRAS", price: 4.50 },
+            { name: "Cañitas de Papel (Pack)", fam: "EXTRAS", price: 2.50 },
+            { name: "Cinta Adhesiva Embalaje", fam: "EXTRAS", price: 2.00 },
+            { name: "Rotuladores Permanentes (Pack)", fam: "EXTRAS", price: 4.00 },
+            { name: "Bloc de Notas Comandas", fam: "EXTRAS", price: 3.00 },
+            { name: "Bolígrafos Azules (Pack 10)", fam: "EXTRAS", price: 3.50 },
+            { name: "Cucharas Postre Inox (Docena)", fam: "EXTRAS", price: 8.00 },
+            { name: "Tenedores Inox (Docena)", fam: "EXTRAS", price: 9.00 },
+            { name: "Cuchillos Inox (Docena)", fam: "EXTRAS", price: 9.00 },
+            { name: "Cucharas Soperas (Docena)", fam: "EXTRAS", price: 9.00 },
+            { name: "Vasos de Agua Vidrio (Docena)", fam: "EXTRAS", price: 12.00 },
+            { name: "Copas de Vino (Docena)", fam: "EXTRAS", price: 18.00 },
+            { name: "Copas de Cava (Docena)", fam: "EXTRAS", price: 20.00 },
+            { name: "Tazas de Café con Plato (Docena)", fam: "EXTRAS", price: 15.00 },
+            { name: "Jarras de Vidrio 1L (Unidad)", fam: "EXTRAS", price: 4.50 },
+            { name: "Ceniceros de Terraza (Unidad)", fam: "EXTRAS", price: 2.50 },
+            { name: "Manteles de Papel (Pack)", fam: "EXTRAS", price: 7.00 },
+            { name: "Cubre manteles (Pack)", fam: "EXTRAS", price: 9.00 },
+            { name: "Gel Hidroalcohólico (L)", fam: "EXTRAS", price: 5.50 },
+            { name: "Mascarillas Quirúrgicas (Caja)", fam: "EXTRAS", price: 6.00 },
+            { name: "Pilas AA (Pack 4)", fam: "EXTRAS", price: 3.50 },
+            { name: "Pilas AAA (Pack 4)", fam: "EXTRAS", price: 3.50 },
+            { name: "Bombillas LED E27 (Unidad)", fam: "EXTRAS", price: 3.00 },
+            { name: "Bombillas LED E14 (Unidad)", fam: "EXTRAS", price: 3.00 },
+            { name: "Cinta Aislante", fam: "EXTRAS", price: 1.50 },
+            { name: "Bridas de Plástico (Pack)", fam: "EXTRAS", price: 2.50 },
+            { name: "Mechones de Encendido (Pack)", fam: "EXTRAS", price: 2.00 },
+            { name: "Encendedores de Cocina", fam: "EXTRAS", price: 1.80 },
+            { name: "Sacos de Yute Decorativos", fam: "EXTRAS", price: 5.00 },
+            { name: "Cestas de Pan Mimbre", fam: "EXTRAS", price: 6.50 },
+            { name: "Bandejas Antideslizantes (Unidad)", fam: "EXTRAS", price: 14.00 },
+            { name: "Cubiteras de Hielo (Unidad)", fam: "EXTRAS", price: 8.50 },
+            { name: "Pinzas de Hielo Inox", fam: "EXTRAS", price: 3.50 },
+            { name: "Coladores de Barra", fam: "EXTRAS", price: 4.50 },
+            { name: "Morteros de Madera", fam: "EXTRAS", price: 7.00 },
+            { name: "Tablas de Corte Polietileno", fam: "EXTRAS", price: 12.00 },
+            { name: "Cuchillos de Cocina Chef", fam: "EXTRAS", price: 19.00 },
+            { name: "Afilador de Cuchillos", fam: "EXTRAS", price: 15.00 },
+            { name: "Tijeras de Cocina Inox", fam: "EXTRAS", price: 5.50 },
+            { name: "Espátulas de Silicona", fam: "EXTRAS", price: 3.50 },
+            { name: "Cucharones de Sopa Inox", fam: "EXTRAS", price: 4.50 },
+            { name: "Espumaderas Inox", fam: "EXTRAS", price: 4.50 },
+            { name: "Batidoras de Varilla Manuales", fam: "EXTRAS", price: 6.00 },
+            { name: "Sartenes Antiadherentes 28cm", fam: "EXTRAS", price: 24.00 },
+            { name: "Ollas de Acero Inoxidable", fam: "EXTRAS", price: 38.00 },
+            { name: "Cacerolas con Tapa", fam: "EXTRAS", price: 29.00 },
+            { name: "Bandejas de Horno Inox", fam: "EXTRAS", price: 18.00 },
+            { name: "Rejillas Enfriadoras Repostería", fam: "EXTRAS", price: 8.00 },
+            { name: "Mangas Pasteleras Desechables", fam: "EXTRAS", price: 5.00 },
+            { name: "Boquillas para Manga Pastelera", fam: "EXTRAS", price: 7.00 },
+            { name: "Moldes de Silicona Repostería", fam: "EXTRAS", price: 9.50 },
+            { name: "Ralladores de Queso Manuales", fam: "EXTRAS", price: 4.50 },
+            { name: "Abrelatas de Mano Profesional", fam: "EXTRAS", price: 7.50 },
+            { name: "Descorchadores de Sommelier", fam: "EXTRAS", price: 4.00 },
+            { name: "Sacacorchos de Pared", fam: "EXTRAS", price: 25.00 },
+            { name: "Dosificadores de Licor", fam: "EXTRAS", price: 1.50 },
+            { name: "Bascula Digital de Cocina", fam: "EXTRAS", price: 22.00 },
+            { name: "Termómetro Digital de Pincho", fam: "EXTRAS", price: 14.00 },
+            { name: "Temporizadores de Cocina Digitales", fam: "EXTRAS", price: 6.00 },
+            { name: "Guantes Térmicos de Horno", fam: "EXTRAS", price: 9.00 },
+            { name: "Delantales con Peto (Unidad)", fam: "EXTRAS", price: 8.50 },
+            { name: "Gorros de Cocina Desechables", fam: "EXTRAS", price: 4.00 },
+            { name: "Casacas de Cocina Blancas", fam: "EXTRAS", price: 19.00 },
+            { name: "Pantalones de Cocina", fam: "EXTRAS", price: 16.00 },
+            { name: "Zapatos Antideslizantes Hostelería", fam: "EXTRAS", price: 35.00 },
+            { name: "Paños de Cocina de Algodón", fam: "EXTRAS", price: 2.50 },
+            { name: "Alfombras Antifatiga Suelo", fam: "EXTRAS", price: 42.00 },
+            { name: "Carteles de Suelo Mojado", fam: "EXTRAS", price: 12.00 },
+            { name: "Señalización Salida Emergencia", fam: "EXTRAS", price: 9.00 },
+            { name: "Extintores de Co2 / Polvo", fam: "EXTRAS", price: 65.00 },
+            { name: "Botiquín de Primeros Auxilios", fam: "EXTRAS", price: 28.00 },
+            { name: "Linternas de Emergencia LED", fam: "EXTRAS", price: 15.00 },
+            { name: "Pilas Recargables AA", fam: "EXTRAS", price: 8.00 },
+            { name: "Cargador de Pilas Universal", fam: "EXTRAS", price: 18.00 },
+            { name: "Regletas de Enchufe con Interruptor", fam: "EXTRAS", price: 9.50 },
+            { name: "Adaptadores de Enchufe Internacional", fam: "EXTRAS", price: 5.00 },
+            { name: "Cables HDMI 2m", fam: "EXTRAS", price: 6.00 },
+            { name: "Cables de Red Ethernet 5m", fam: "EXTRAS", price: 7.00 },
+            { name: "Router Wi-Fi Repetidor", fam: "EXTRAS", price: 32.00 },
+            { name: "Terminales de Cobro Datáfono", fam: "EXTRAS", price: 120.00 },
+            { name: "Rollos de Papel Datáfono (Pack 10)", fam: "EXTRAS", price: 6.50 },
+            { name: "Impresora de Comandas Térmica", fam: "EXTRAS", price: 145.00 },
+            { name: "Rollos de Papel Comandas (Pack 10)", fam: "EXTRAS", price: 7.50 },
+            { name: "Cajón Portamonedas Automático", fam: "EXTRAS", price: 65.00 },
+            { name: "Lupas de Lectura de Cartas", fam: "EXTRAS", price: 4.50 },
+            { name: "Soportes de Carta de Mesa", fam: "EXTRAS", price: 3.50 },
+            { name: "Pizarras de Menú Pequeñas", fam: "EXTRAS", price: 12.00 },
+            { name: "Tizas Blancas y de Colores (Box)", fam: "EXTRAS", price: 3.50 },
+            { name: "Borradores para Pizarra", fam: "EXTRAS", price: 2.50 },
+            { name: "Rotuladores para Pizarra Blanca", fam: "EXTRAS", price: 5.00 },
+            { name: "Expositores de Folletos de Mesa", fam: "EXTRAS", price: 6.00 },
+            { name: "Tarjetas de Reservado de Mesa", fam: "EXTRAS", price: 2.00 },
+            { name: "Banderas Publicitarias Exterior", fam: "EXTRAS", price: 45.00 },
+            { name: "Parasoles Grandes de Terraza", fam: "EXTRAS", price: 180.00 },
+            { name: "Fundas Protectoras de Parasol", fam: "EXTRAS", price: 22.00 },
+            { name: "Estufas de Terraza a Gas", fam: "EXTRAS", price: 160.00 },
+            { name: "Bombonas de Butano / Propano", fam: "EXTRAS", price: 18.50 },
+            { name: "Mantas de Terraza para Clientes", fam: "EXTRAS", price: 14.00 },
+            { name: "Cestas para Ropa Sucia", fam: "EXTRAS", price: 18.00 },
+            { name: "Perchas de Madera para Armario", fam: "EXTRAS", price: 1.50 },
+            { name: "Carteles Prohibido Fumar", fam: "EXTRAS", price: 3.00 },
+            { name: "Papeleras de Baño con Pedal", fam: "EXTRAS", price: 12.00 },
+            { name: "Dispensadores de Jabón de Manos", fam: "EXTRAS", price: 14.00 },
+            { name: "Jabón de Manos Líquido (L)", fam: "EXTRAS", price: 3.50 },
+            { name: "Ambientador de Espacios (Spray)", fam: "EXTRAS", price: 4.50 },
+            { name: "Recambios Ambientador Automático", fam: "EXTRAS", price: 5.50 },
+            { name: "Producto Adicional 1", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 2", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 3", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 4", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 5", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 6", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 7", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 8", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 9", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 10", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 11", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 12", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 13", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 14", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 15", fam: "EXTRAS", price: 5.00 },
+            { name: "Producto Adicional 16", fam: "EXTRAS", price: 5.00 }
+        ];
 
-  <footer>
-    <div class="total">
-      <span class="l">Suma Global</span>
-      <span id="footerTotal">0.00 €</span>
-    </div>
-    <div class="footer-actions">
-      <button class="fbtn" id="resetBtn">Limpiar</button>
-      <button class="fbtn" style="background:var(--ochre); color:var(--ink); border-color:var(--ochre); font-weight:500;" id="exportBtn">Excel</button>
-    </div>
-  </footer>
-</div>
+        function handleLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('login-error');
 
-<div class="overlay" id="addOverlay">
+            // Credenciales de prueba: admin / 1234
+            if (user === "admin" && pass === "1234") {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('app-container').style.display = 'flex';
+                document.getElementById('user-display').innerText = `Usuario: ${user}`;
+                loadProducts();
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('login-container').style.display = 'block';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        function loadProducts() {
+            const tbody = document.getElementById('product-table-body');
+            tbody.innerHTML = '';
+
+            initialProducts.forEach((prod, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${prod.name}</strong></td>
+                    <td>${prod.fam}</td>
+                    <td>${prod.price.toFixed(2)} €</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('total-count').innerText = initialProducts.length;
+        }
+    </script>
+</body>
+</html>
