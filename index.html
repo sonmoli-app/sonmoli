@@ -316,7 +316,7 @@
     { name: "Vasos de Agua Vidrio (Docena)", fam: "EXTRAS", price: 12.00 },
     { name: "Copas de Vino (Docena)", fam: "EXTRAS", price: 18.00 },
     { name: "Copas de Cava (Docena)", fam: "EXTRAS", price: 20.00 },
-    { name: "Tazas de Café con Plato (Docena)", fam: "EXTRAS",price: 15.00 },
+    { name: "Tazas de Café con Plato (Docena)", fam: "EXTRAS", price: 15.00 },
     { name: "Jarras de Vidrio 1L (Unidad)", fam: "EXTRAS", price: 4.50 },
     { name: "Ceniceros de Terraza (Unidad)", fam: "EXTRAS", price: 2.50 },
     { name: "Manteles de Papel (Pack)", fam: "EXTRAS", price: 7.00 },
@@ -371,7 +371,7 @@
     { name: "Paños de Cocina de Algodón", fam: "EXTRAS", price: 2.50 },
     { name: "Alfombras Antifatiga Suelo", fam: "EXTRAS", price: 42.00 },
     { name: "Carteles de Suelo Mojado", fam: "EXTRAS", price: 12.00 },
-    { name: " Señalización Salida Emergencia", fam: "EXTRAS", price: 9.00 },
+    { name: "Señalización Salida Emergencia", fam: "EXTRAS", price: 9.00 },
     { name: "Extintores de Co2 / Polvo", fam: "EXTRAS", price: 65.00 },
     { name: "Botiquín de Primeros Auxilios", fam: "EXTRAS", price: 28.00 },
     { name: "Linternas de Emergencia LED", fam: "EXTRAS", price: 15.00 },
@@ -468,14 +468,13 @@
       snapshot.forEach(doc => {
         itemsData.push({ id: doc.id, ...doc.data() });
       });
-      document.getElementById('syncStatus').textContent = 'Conectado en tiempo real · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('syncStatus').textContent = 'Conectado · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
       renderApp();
     }, (err)=>{
       document.getElementById('syncStatus').textContent = 'Error de conexión: ' + err.message;
     });
   }
 
-  // Render App UI
   function renderApp(){
     renderChips();
     renderItems();
@@ -542,7 +541,6 @@
         <button class="del-btn" title="Eliminar">✕</button>
       `;
 
-      // Eventos
       el.querySelector('.btn-minus').addEventListener('click', () => updateQty(item.id, Math.max(0, qty - 1)));
       el.querySelector('.btn-plus').addEventListener('click', () => updateQty(item.id, qty + 1));
       el.querySelector('.del-btn').addEventListener('click', () => deleteItem(item.id));
@@ -590,13 +588,11 @@
     document.getElementById('footTotal').textContent = totalVal.toFixed(2) + ' €';
   }
 
-  // Buscador
   document.getElementById('search').addEventListener('input', (e)=>{
     searchTerm = e.target.value;
     renderItems();
   });
 
-  // Modal Añadir
   const overlay = document.getElementById('overlay');
   document.getElementById('openAddBtn').addEventListener('click', () => overlay.classList.add('open'));
   document.getElementById('cancelAdd').addEventListener('click', () => overlay.classList.remove('open'));
@@ -622,7 +618,6 @@
     });
   });
 
-  // Exportar Excel
   document.getElementById('excelBtn').addEventListener('click', ()=>{
     const data = itemsData.map(i => ({
       Familia: i.fam || 'GENERAL',
@@ -637,7 +632,6 @@
     XLSX.writeFile(wb, `Inventario_SonMoli_${new Date().toISOString().slice(0,10)}.xlsx`);
   });
 
-  // Copiar al Portapapeles
   document.getElementById('copyBtn').addEventListener('click', ()=>{
     let text = "INVENTARIO F&B - SON MOLÍ\n\n";
     itemsData.filter(i => (i.qty || 0) > 0).forEach(i => {
