@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Son Molí · Housekeeping</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stone:#e9e2cd; --olive:#3f4a2b; --olive-deep:#2a3220; --sage:#7a8560;
+    --ochre:#b9812f; --oil:#8b5e1f; --brick:#9c4530; --ink:#2b2a22; --paper:#f4efe0;
+    --ok:#4c6b3f; --wait:#b9812f; --busy:#9c4530; --insp:#5b6b8a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:var(--paper); color:var(--ink); font-family:'Work Sans',sans-serif; font-weight:300; overflow-x:hidden;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:500;}
+  .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.06em;}
+  button{font-family:inherit;}
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{
+    position:fixed; inset:0; z-index:100; background:var(--olive-deep);
+    display:flex; align-items:center; justify-content:center; padding:1.4rem;
+  }
+  .login-card{background:var(--paper); width:100%; max-width:380px; padding:2rem 1.6rem; border-radius:8px;}
+  .login-card .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--ochre);}
+  .login-card h1{font-size:1.5rem; margin:0.3rem 0 1.4rem;}
+  .login-card label{display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:rgba(43,42,34,0.55); margin-bottom:0.35rem;}
+  .login-card input{width:100%; padding:0.7rem 0.8rem; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:0.95rem; margin-bottom:1rem;}
+  .login-btn{width:100%; padding:0.85rem; background:var(--olive); color:var(--paper); border:none; font-family:'IBM Plex Mono',monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
+  .login-error{color:var(--brick); font-size:0.8rem; margin-top:0.8rem; min-height:1.2em;}
+  #appRoot{display:none;}
+
+  header{
+    position:sticky; top:0; z-index:20;
+    background:var(--olive-deep); color:var(--paper);
+    padding:1.2rem 1.4rem; display:flex; justify-content:space-between; align-items:flex-start;
+  }
+  header .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--ochre);}
+  header h1{font-size:1.3rem; margin-top:0.2rem;}
+  .sync{font-size:0.68rem; color:rgba(244,239,224,0.5); margin-top:0.4rem; font-family:'IBM Plex Mono',monospace;}
+  .sync.saving{color:var(--ochre);}
+  #logoutBtn{background:transparent; border:1px solid rgba(244,239,224,0.35); color:var(--paper); padding:0.4rem 0.7rem; font-family:'IBM Plex Mono',monospace; font-size:0.62rem; text-transform:uppercase; cursor:pointer;}
+
+  main{padding:1.2rem;}
+
+  .legend{display:flex; gap:1rem; flex-wrap:wrap; font-size:0.72rem; color:rgba(43,42,34,0.6); margin-bottom:1rem;}
+  .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:0.35rem;}
+  .dot.ok{background:var(--ok);} .dot.wait{background:var(--wait);} .dot.busy{background:var(--brick);} .dot.insp{background:var(--insp);}
+
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:rgba(43,42,34,0.12); border:1px solid rgba(43,42,34,0.12); margin-bottom:1.4rem;}
+  .kpi{background:#fff; padding:0.8rem;}
+  .kpi .n{font-family:'Fraunces',serif; font-size:1.4rem;}
+  .kpi .l{font-size:0.6rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(43,42,34,0.5);}
+
+  .rooms{display:grid; grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:0.6rem;}
+  .room{
+    background:#fff; border:1px solid rgba(43,42,34,0.12); border-top:3px solid var(--busy);
+    padding:0.7rem 0.6rem; cursor:pointer; position:relative; min-height:88px;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .room.limpia{border-top-color:var(--ok);}
+  .room.sucia{border-top-color:var(--busy);}
+  .room.proceso{border-top-color:var(--wait);}
+  .room.inspeccion{border-top-color:var(--insp);}
+  .room .num{font-family:'Fraunces',serif; font-size:1.15rem;}
+  .room .status{font-size:0.6rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(43,42,34,0.55); margin-top:0.2rem;}
+  .room .icons{display:flex; gap:0.25rem; margin-top:0.4rem; font-size:0.8rem;}
+  .room .checkout{font-family:'IBM Plex Mono',monospace; font-size:0.55rem; color:var(--brick); margin-top:0.2rem;}
+
+  .overlay{position:fixed; inset:0; background:rgba(43,42,34,0.55); z-index:50; display:none; align-items:flex-end; justify-content:center;}
+  .overlay.open{display:flex;}
+  .sheet{background:var(--paper); width:100%; max-width:520px; max-height:92vh; overflow-y:auto; border-radius:16px 16px 0 0; padding:1.4rem 1.4rem 2rem;}
+  @media (min-width:640px){ .overlay{align-items:center;} .sheet{border-radius:12px; max-height:88vh;} }
+  .sheet-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;}
+  .sheet-head h2{font-size:1.4rem;}
+  .close-btn{background:none; border:none; font-size:1.4rem; color:var(--ink); cursor:pointer; line-height:1;}
+
+  .field{margin-bottom:1.1rem;}
+  .field label{display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:rgba(43,42,34,0.55); margin-bottom:0.4rem;}
+  .status-row{display:flex; gap:0.5rem; flex-wrap:wrap;}
+  .status-btn{flex:1; min-width:80px; padding:0.6rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.03em; cursor:pointer; text-align:center;}
+  .status-btn.sel-limpia{background:var(--ok); color:#fff; border-color:var(--ok);}
+  .status-btn.sel-sucia{background:var(--busy); color:#fff; border-color:var(--busy);}
+  .status-btn.sel-proceso{background:var(--wait); color:#fff; border-color:var(--wait);}
+  .status-btn.sel-inspeccion{background:var(--insp); color:#fff; border-color:var(--insp);}
+
+  .readonly-field{padding:0.65rem 0.7rem; border:1px solid rgba(43,42,34,0.15); background:var(--stone); font-size:0.92rem;}
+  input[type=date], textarea{width:100%; padding:0.65rem 0.7rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-family:'Work Sans',sans-serif; font-size:0.92rem; color:var(--ink);}
+  textarea{min-height:70px; resize:vertical;}
+
+  .toggle-row{display:flex; gap:0.6rem; flex-wrap:wrap;}
+  .toggle{display:flex; align-items:center; gap:0.5rem; padding:0.55rem 0.8rem; border:1px solid rgba(43,42,34,0.2); background:#fff; cursor:pointer; font-size:0.85rem;}
+  .toggle.on{background:var(--stone); border-color:var(--olive);}
+  .toggle input{accent-color:var(--olive);}
+
+  .save-bar{display:flex; gap:0.6rem; margin-top:1.4rem;}
+  .btn{flex:1; padding:0.8rem; border:none; font-family:'IBM Plex Mono',monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
+  .btn-primary{background:var(--olive); color:var(--paper);}
+  .btn-ghost{background:transparent; border:1px solid rgba(43,42,34,0.25); color:var(--ink);}
+
+  .loading{padding:3rem 1rem; text-align:center; color:rgba(43,42,34,0.5); font-family:'IBM Plex Mono',monospace; font-size:0.8rem;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="eyebrow">Son Molí · Equipo de pisos</div>
+    <h1>Housekeeping</h1>
+    <label>Usuario</label>
+    <input type="text" id="loginEmail" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Tu nombre de usuario">
+    <label>Contraseña</label>
+    <div style="position:relative;">
+      <input type="password" id="loginPass" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" style="padding-right:3.2rem;">
+      <button type="button" id="togglePass" style="position:absolute; right:0.5rem; top:0.5rem; background:none; border:none; font-size:0.7rem; font-family:'IBM Plex Mono',monospace; color:rgba(43,42,34,0.5); cursor:pointer; padding:0.3rem 0.5rem;">VER</button>
+    </div>
+    <button class="login-btn" id="loginBtn">Entrar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div id="appRoot">
+<header>
+  <div>
+    <div class="eyebrow">Son Molí · Equipo de pisos</div>
+    <h1>Housekeeping</h1>
+    <div class="sync" id="syncStatus">Conectando…</div>
+  </div>
+  <button id="logoutBtn">Salir</button>
+</header>
+
+<main>
+  <div class="legend">
+    <span><span class="dot ok"></span>Limpia</span>
+    <span><span class="dot busy"></span>Pendiente</span>
+    <span><span class="dot wait"></span>En proceso</span>
+    <span><span class="dot insp"></span>Inspección</span>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="n" id="kLimpia">–</div><div class="l">Limpias</div></div>
+    <div class="kpi"><div class="n" id="kPendiente">–</div><div class="l">Pendientes</div></div>
+    <div class="kpi"><div class="n" id="kMinibar">–</div><div class="l">Nevera x reponer</div></div>
+    <div class="kpi"><div class="n" id="kEspeciales">–</div><div class="l">Con peticiones</div></div>
+  </div>
+
+  <div class="rooms" id="roomsGrid"><div class="loading">Cargando habitaciones…</div></div>
+</main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="sheetTitle">Hab. —</h2>
+      <button class="close-btn" id="closeBtn">✕</button>
+    </div>
+
+    <div class="field">
+      <label>Estado</label>
+      <div class="status-row" id="statusRow"></div>
+    </div>
+
+    <div class="field">
+      <label>Limpiado por</label>
+      <div class="readonly-field" id="cleanedByDisplay">—</div>
+    </div>
+
+    <div class="field">
+      <label>Ocupada hasta (salida prevista)</label>
+      <input type="date" id="checkoutUntil">
+    </div>
+
+    <div class="field">
+      <label>En la habitación hay</label>
+      <div class="toggle-row">
+        <label class="toggle" id="petToggle"><input type="checkbox" id="petCheck">🐕 Perro</label>
+        <label class="toggle" id="bedToggle"><input type="checkbox" id="bedCheck">🛏️ Cama extra</label>
+        <label class="toggle" id="minibarToggle"><input type="checkbox" id="minibarCheck">🧊 Reponer nevera</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Notas / peticiones especiales</label>
+      <textarea id="notes" placeholder="Ej: cliente pide almohada extra, alergia, llegada tardía..."></textarea>
+    </div>
+
+    <div class="save-bar">
+      <button class="btn btn-ghost" id="clearBtn">Vaciar habitación</button>
+      <button class="btn btn-primary" id="saveBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-firestore-compat.min.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDGaXka_ox82HoTQxeKcK4FMsu_9fH1RIE",
+    authDomain: "son-moli-sistemas.firebaseapp.com",
+    projectId: "son-moli-sistemas",
+    storageBucket: "son-moli-sistemas.firebasestorage.app",
+    messagingSenderId: "341368220861",
+    appId: "1:341368220861:web:ac47e37a7637926acbdbd4"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const ROOM_NUMBERS = Array.from({length:23}, (_,i)=>i+1).filter(n=>n!==13);
+  const roomsCol = db.collection('housekeeping_rooms');
+  const logCol = db.collection('housekeeping_log');
+
+  let roomsState = {};
+  let currentRoom = null;
+  let currentUserName = '';
+
+  function defaultRoom(){
+    return { status:'sucia', cleanedBy:'', notes:'', checkoutUntil:'', pet:false, extraBed:false, minibarPending:false };
+  }
+  function statusLabel(s){
+    return {limpia:'Limpia', sucia:'Pendiente', proceso:'En proceso', inspeccion:'Inspección'}[s] || s;
+  }
+
+  // ---------- LOGIN ----------
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  document.getElementById('togglePass').addEventListener('click', ()=>{
+    const p = document.getElementById('loginPass');
+    const btn = document.getElementById('togglePass');
+    if(p.type==='password'){ p.type='text'; btn.textContent='OCULTAR'; }
+    else { p.type='password'; btn.textContent='VER'; }
+  });
+  document.getElementById('loginPass').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
+
+  function doLogin(){
+    let username = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('loginPass').value;
+    document.getElementById('loginError').textContent = '';
+    const email = username.includes('@') ? username : `${username}@sonmoli.local`;
+    auth.signInWithEmailAndPassword(email, pass).catch(err=>{
+      document.getElementById('loginError').textContent = 'Usuario o contraseña incorrectos.';
+    });
+  }
+  document.getElementById('logoutBtn').addEventListener('click', ()=> auth.signOut());
+
+  const ALLOWED_USERS = ['ines','remedios','miriam','manuela','isa'];
+
+  auth.onAuthStateChanged((user)=>{
+    if(user){
+      const username = (user.email || '').split('@')[0];
+      if(!ALLOWED_USERS.includes(username)){
+        document.getElementById('loginError').textContent = 'Esta cuenta no tiene acceso a Housekeeping.';
+        auth.signOut();
+        return;
+      }
+      currentUserName = username;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appRoot').style.display = 'block';
+      initRoomsListener();
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('appRoot').style.display = 'none';
+    }
+  });
+
+  // ---------- FIRESTORE REALTIME ----------
+  function initRoomsListener(){
+    document.getElementById('syncStatus').textContent = 'Conectando…';
+    roomsCol.onSnapshot((snapshot)=>{
+      snapshot.forEach(d=>{ roomsState[d.id] = d.data(); });
+      ROOM_NUMBERS.forEach(n=>{ if(!roomsState[n]) roomsState[n] = defaultRoom(); });
+      document.getElementById('syncStatus').textContent = 'Conectado en tiempo real · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      renderRooms();
+      updateKpis();
+    }, (err)=>{
+      document.getElementById('syncStatus').textContent = 'Error de conexión: ' + err.message;
+    });
+  }
+
+  async function saveRoom(n, data){
+    document.getElementById('syncStatus').textContent = 'Guardando…';
+    try{
+      await roomsCol.doc(String(n)).set(data);
+      await logCol.add({
+        room: n, text: `Hab. ${n} → ${statusLabel(data.status)}${data.cleanedBy ? ' por '+data.cleanedBy : ''}`,
+        at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }catch(e){
+      document.getElementById('syncStatus').textContent = 'Error al guardar: ' + e.message;
+    }
+  }
+
+  function renderRooms(){
+    const grid = document.getElementById('roomsGrid');
+    grid.innerHTML = '';
+    ROOM_NUMBERS.forEach(n=>{
+      const r = roomsState[n];
+      const el = document.createElement('div');
+      el.className = `room ${r.status}`;
+      let icons = '';
+      if(r.pet) icons += '🐕';
+      if(r.extraBed) icons += '🛏️';
+      if(r.minibarPending) icons += '🧊';
+      el.innerHTML = `
+        <div><div class="num">${n}</div><div class="status">${statusLabel(r.status)}</div></div>
+        <div>
+          <div class="icons">${icons}</div>
+          ${r.checkoutUntil ? `<div class="checkout">hasta ${r.checkoutUntil.split('-').reverse().join('/')}</div>` : ''}
+        </div>`;
+      el.addEventListener('click', ()=>openRoom(n));
+      grid.appendChild(el);
+    });
+  }
+
+  function updateKpis(){
+    const rooms = Object.values(roomsState);
+    document.getElementById('kLimpia').textContent = rooms.filter(r=>r.status==='limpia').length;
+    document.getElementById('kPendiente').textContent = rooms.filter(r=>r.status==='sucia').length;
+    document.getElementById('kMinibar').textContent = rooms.filter(r=>r.minibarPending).length;
+    document.getElementById('kEspeciales').textContent = rooms.filter(r=>r.notes && r.notes.trim()!=='').length;
+  }
+
+  const STATUSES = ['sucia','proceso','limpia','inspeccion'];
+  function renderStatusRow(current){
+    const row = document.getElementById('statusRow');
+    row.innerHTML = '';
+    STATUSES.forEach(s=>{
+      const btn = document.createElement('button');
+      btn.className = 'status-btn' + (s===current ? ' sel-'+s : '');
+      btn.textContent = statusLabel(s);
+      btn.addEventListener('click', ()=>{ 
+        currentRoom.status = s; 
+        if(s === 'limpia' || s === 'inspeccion') {
+          currentRoom.cleanedBy = currentUserName;
+        }
+        document.getElementById('cleanedByDisplay').textContent = currentRoom.cleanedBy || '—';
+        renderStatusRow(s); 
+      });
+      row.appendChild(btn);
+    });
+  }
+
+  function openRoom(n){
+    currentRoom = { ...roomsState[n] };
+    currentRoom._num = n;
+    document.getElementById('sheetTitle').textContent = 'Habitación ' + n;
+    document.getElementById('cleanedByDisplay').textContent = currentRoom.cleanedBy || '—';
+    renderStatusRow(currentRoom.status);
+    document.getElementById('checkoutUntil').value = currentRoom.checkoutUntil || '';
+    document.getElementById('notes').value = currentRoom.notes || '';
+    document.getElementById('petCheck').checked = !!currentRoom.pet;
+    document.getElementById('bedCheck').checked = !!currentRoom.extraBed;
+    document.getElementById('minibarCheck').checked = !!currentRoom.minibarPending;
+    document.getElementById('overlay').classList.add('open');
+  }
+  function closeSheet(){ document.getElementById('overlay').classList.remove('open'); currentRoom = null; }
+
+  document.getElementById('closeBtn').addEventListener('click', closeSheet);
+  document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id === 'overlay') closeSheet(); });
+
+  document.getElementById('saveBtn').addEventListener('click', ()=>{
+    if(!currentRoom) return;
+    const n = currentRoom._num;
+    const data = {
+      status: currentRoom.status,
+      cleanedBy: currentRoom.cleanedBy || '',
+      notes: document.getElementById('notes').value.trim(),
+      checkoutUntil: document.getElementById('checkoutUntil').value,
+      pet: document.getElementById('petCheck').checked,
+      extraBed: document.getElementById('bedCheck').checked,
+      minibarPending: document.getElementById('minibarCheck').checked
+    };
+    saveRoom(n, data);
+    closeSheet();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    if(!currentRoom) return;
+    saveRoom(currentRoom._num, defaultRoom());
+    closeSheet();
+  });
+</script>
+
+</body>
+</html>

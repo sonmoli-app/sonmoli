@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Son Molí · Inventario F&B</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stone:#e9e2cd; --olive:#3f4a2b; --olive-deep:#2a3220; --sage:#7a8560;
+    --ochre:#b9812f; --oil:#8b5e1f; --brick:#9c4530; --ink:#2b2a22; --paper:#f4efe0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{background:var(--paper); color:var(--ink); font-family:'Work Sans',sans-serif; font-weight:300;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:500;}
+  .mono{font-family:'IBM Plex Mono',monospace; letter-spacing:0.06em;}
+  button{font-family:inherit;}
+
+  #loginScreen{position:fixed; inset:0; z-index:100; background:var(--olive-deep); display:flex; align-items:center; justify-content:center; padding:1.4rem;}
+  .login-card{background:var(--paper); width:100%; max-width:380px; padding:2rem 1.6rem; border-radius:8px;}
+  .login-card .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--ochre);}
+  .login-card h1{font-size:1.5rem; margin:0.3rem 0 1.4rem;}
+  .login-card label{display:block; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:rgba(43,42,34,0.55); margin-bottom:0.35rem;}
+  .login-card input{width:100%; padding:0.7rem 0.8rem; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:0.95rem; margin-bottom:1rem;}
+  .login-btn{width:100%; padding:0.85rem; background:var(--olive); color:var(--paper); border:none; font-family:'IBM Plex Mono',monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
+  .login-error{color:var(--brick); font-size:0.8rem; margin-top:0.8rem; min-height:1.2em;}
+  #appRoot{display:none;}
+
+  header{position:sticky; top:0; z-index:20; background:var(--olive-deep); color:var(--paper); padding:1.2rem 1.4rem; display:flex; justify-content:space-between; align-items:flex-start;}
+  header .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--ochre);}
+  header h1{font-size:1.3rem; margin-top:0.2rem;}
+  .sync{font-size:0.68rem; color:rgba(244,239,224,0.5); margin-top:0.4rem; font-family:'IBM Plex Mono',monospace;}
+  #logoutBtn{background:transparent; border:1px solid rgba(244,239,224,0.35); color:var(--paper); padding:0.4rem 0.7rem; font-family:'IBM Plex Mono',monospace; font-size:0.62rem; text-transform:uppercase; cursor:pointer;}
+
+  main{padding:1.2rem 1.2rem 6rem;}
+
+  .searchbar{display:flex; gap:0.5rem; margin-bottom:1rem;}
+  .searchbar input{flex:1; padding:0.7rem 0.9rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-family:'Work Sans',sans-serif; font-size:0.9rem;}
+  .add-btn{background:var(--olive); color:var(--paper); border:none; padding:0 1rem; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; cursor:pointer;}
+
+  .chips{display:flex; gap:0.5rem; overflow-x:auto; margin-bottom:1.2rem; padding-bottom:0.2rem;}
+  .chip{flex-shrink:0; padding:0.4rem 0.9rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-family:'IBM Plex Mono',monospace; font-size:0.68rem; text-transform:uppercase; cursor:pointer; white-space:nowrap;}
+  .chip.active{background:var(--olive); color:var(--paper); border-color:var(--olive);}
+
+  .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(43,42,34,0.12); border:1px solid rgba(43,42,34,0.12); margin-bottom:1.2rem;}
+  .kpi{background:#fff; padding:0.8rem;}
+  .kpi .n{font-family:'Fraunces',serif; font-size:1.3rem;}
+  .kpi .l{font-size:0.58rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(43,42,34,0.5);}
+
+  .item{background:#fff; border:1px solid rgba(43,42,34,0.12); padding:0.9rem 1rem; display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem;}
+  .item-main{flex:1; min-width:0;}
+  .item-name{font-size:0.92rem; font-weight:400;}
+  .item-fam{font-size:0.62rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--sage); margin-top:0.15rem;}
+  .item-price{font-family:'IBM Plex Mono',monospace; font-size:0.85rem; color:var(--oil); cursor:pointer; border-bottom:1px dashed var(--oil); padding-bottom:1px;}
+  .item-price input{width:70px; font-family:'IBM Plex Mono',monospace; font-size:0.85rem; border:1px solid var(--oil); padding:0.2rem 0.3rem;}
+  .counter{display:flex; align-items:center; gap:0.5rem;}
+  .cbtn{width:30px; height:30px; border:1px solid rgba(43,42,34,0.25); background:#fff; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .cnum{width:34px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:0.9rem;}
+  .del-btn{background:none; border:none; color:var(--brick); font-size:1rem; cursor:pointer; padding:0.2rem 0.3rem;}
+
+  .empty{text-align:center; padding:2.5rem 1rem; color:rgba(43,42,34,0.45); font-family:'IBM Plex Mono',monospace; font-size:0.78rem;}
+
+  footer{position:fixed; bottom:0; left:0; right:0; background:var(--olive-deep); padding:0.9rem 1.2rem; display:flex; gap:0.6rem; align-items:center; justify-content:space-between; z-index: 10;}
+  footer .total{color:var(--paper); font-family:'Fraunces',serif; font-size:1.1rem;}
+  footer .total .l{display:block; font-family:'IBM Plex Mono',monospace; font-size:0.58rem; text-transform:uppercase; color:rgba(244,239,224,0.5);}
+  .footer-actions{display:flex; gap:0.5rem;}
+  .fbtn{background:transparent; border:1px solid rgba(244,239,224,0.35); color:var(--paper); padding:0.55rem 0.8rem; font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; cursor:pointer;}
+
+  .overlay{position:fixed; inset:0; background:rgba(43,42,34,0.55); z-index:50; display:none; align-items:flex-end; justify-content:center;}
+  .overlay.open{display:flex;}
+  .sheet{background:var(--paper); width:100%; max-width:460px; border-radius:16px 16px 0 0; padding:1.4rem;}
+  @media (min-width:640px){ .overlay{align-items:center;} .sheet{border-radius:12px;} }
+  .sheet h2{font-size:1.2rem; margin-bottom:1rem;}
+  .field{margin-bottom:0.9rem;}
+  .field label{display:block; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.05em; color:rgba(43,42,34,0.55); margin-bottom:0.3rem;}
+  .field input{width:100%; padding:0.6rem 0.7rem; border:1px solid rgba(43,42,34,0.2); background:#fff; font-size:0.9rem;}
+  .save-bar{display:flex; gap:0.6rem; margin-top:1.2rem;}
+  .btn{flex:1; padding:0.75rem; border:none; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; cursor:pointer;}
+  .btn-primary{background:var(--olive); color:var(--paper);}
+  .btn-ghost{background:transparent; border:1px solid rgba(43,42,34,0.25); color:var(--ink);}
+
+  .loading{padding:3rem 1rem; text-align:center; color:rgba(43,42,34,0.5); font-family:'IBM Plex Mono',monospace; font-size:0.8rem;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="eyebrow">Son Molí · Bar / Cocina</div>
+    <h1>Inventario</h1>
+    <label>Usuario</label>
+    <input type="text" id="loginEmail" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Tu nombre de usuario">
+    <label>Contraseña</label>
+    <div style="position:relative;">
+      <input type="password" id="loginPass" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" style="padding-right:3.2rem;">
+      <button type="button" id="togglePass" style="position:absolute; right:0.5rem; top:0.5rem; background:none; border:none; font-size:0.7rem; font-family:'IBM Plex Mono',monospace; color:rgba(43,42,34,0.5); cursor:pointer; padding:0.3rem 0.5rem;">VER</button>
+    </div>
+    <button class="login-btn" id="loginBtn">Entrar</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div id="appRoot">
+<header>
+  <div>
+    <div class="eyebrow">Son Molí · Bar / Cocina</div>
+    <h1>Inventario</h1>
+    <div class="sync" id="syncStatus">Conectando…</div>
+  </div>
+  <button id="logoutBtn">Salir</button>
+</header>
+
+<main>
+  <div class="searchbar">
+    <input type="text" id="search" placeholder="Buscar producto...">
+    <button class="add-btn" id="openAddBtn">+ Añadir</button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="n" id="kProductos">–</div><div class="l">Productos</div></div>
+    <div class="kpi"><div class="n" id="kUnidades">–</div><div class="l">Unidades contadas</div></div>
+    <div class="kpi"><div class="n" id="kValor">–</div><div class="l">Valor total</div></div>
+  </div>
+
+  <div id="itemsList"><div class="loading">Cargando inventario…</div></div>
+</main>
+
+<footer>
+  <div class="total"><span class="l">Valor inventario</span><span id="footTotal">0,00 €</span></div>
+  <div class="footer-actions">
+    <button class="fbtn" id="copyBtn">Copiar</button>
+    <button class="fbtn" id="excelBtn">Excel</button>
+  </div>
+</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2>Nuevo producto</h2>
+    <div class="field"><label>Nombre</label><input type="text" id="newName" placeholder="Ej: Ron Barceló"></div>
+    <div class="field"><label>Familia</label><input type="text" id="newFam" placeholder="Ej: LICOR" list="famList"><datalist id="famList"></datalist></div>
+    <div class="field"><label>Precio (€)</label><input type="text" inputmode="decimal" id="newPrice" placeholder="0,00"></div>
+    <div class="save-bar">
+      <button class="btn btn-ghost" id="cancelAdd">Cancelar</button>
+      <button class="btn btn-primary" id="confirmAdd">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-firestore-compat.min.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDGaXka_ox82HoTQxeKcK4FMsu_9fH1RIE",
+    authDomain: "son-moli-sistemas.firebaseapp.com",
+    projectId: "son-moli-sistemas",
+    storageBucket: "son-moli-sistemas.firebasestorage.app",
+    messagingSenderId: "341368220861",
+    appId: "1:341368220861:web:ac47e37a7637926acbdbd4"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const itemsCol = db.collection('fyb_items');
+
+  let itemsData = [];
+  let currentFam = 'TODOS';
+  let searchTerm = '';
+
+  // Auth Handlers
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  document.getElementById('togglePass').addEventListener('click', ()=>{
+    const p = document.getElementById('loginPass');
+    const btn = document.getElementById('togglePass');
+    if(p.type==='password'){ p.type='text'; btn.textContent='OCULTAR'; }
+    else { p.type='password'; btn.textContent='VER'; }
+  });
+  document.getElementById('loginPass').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin(); });
+
+  function doLogin(){
+    let username = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const pass = document.getElementById('loginPass').value;
+    document.getElementById('loginError').textContent = '';
+    const email = username.includes('@') ? username : `${username}@sonmoli.local`;
+    auth.signInWithEmailAndPassword(email, pass).catch(err=>{
+      document.getElementById('loginError').textContent = 'Usuario o contraseña incorrectos.';
+    });
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', ()=> auth.signOut());
+
+  auth.onAuthStateChanged((user)=>{
+    if(user){
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appRoot').style.display = 'block';
+      initInventoryListener();
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('appRoot').style.display = 'none';
+    }
+  });
+
+  // Firestore Realtime Listener
+  function initInventoryListener(){
+    document.getElementById('syncStatus').textContent = 'Conectando…';
+    itemsCol.onSnapshot((snapshot)=>{
+      itemsData = [];
+      snapshot.forEach(doc => {
+        itemsData.push({ id: doc.id, ...doc.data() });
+      });
+      document.getElementById('syncStatus').textContent = 'Conectado en tiempo real · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      renderApp();
+    }, (err)=>{
+      document.getElementById('syncStatus').textContent = 'Error de conexión: ' + err.message;
+    });
+  }
+
+  // Render App UI
+  function renderApp(){
+    renderChips();
+    renderItems();
+    updateKPIs();
+  }
+
+  function getFamilies(){
+    const fams = new Set(itemsData.map(i => i.fam || 'GENERAL'));
+    return ['TODOS', ...Array.from(fams).sort()];
+  }
+
+  function renderChips(){
+    const container = document.getElementById('chips');
+    container.innerHTML = '';
+    const fams = getFamilies();
+    
+    const datalist = document.getElementById('famList');
+    datalist.innerHTML = fams.filter(f=>f!=='TODOS').map(f => `<option value="${f}">`).join('');
+
+    fams.forEach(f => {
+      const chip = document.createElement('button');
+      chip.className = `chip ${f === currentFam ? 'active' : ''}`;
+      chip.textContent = f;
+      chip.addEventListener('click', ()=>{
+        currentFam = f;
+        renderApp();
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function renderItems(){
+    const list = document.getElementById('itemsList');
+    list.innerHTML = '';
+
+    const filtered = itemsData.filter(i => {
+      const matchFam = currentFam === 'TODOS' || i.fam === currentFam;
+      const matchSearch = (i.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+      return matchFam && matchSearch;
+    });
+
+    if(filtered.length === 0){
+      list.innerHTML = '<div class="empty">No se encontraron productos</div>';
+      return;
+    }
+
+    filtered.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      const qty = item.qty || 0;
+      const price = item.price || 0;
+
+      el.innerHTML = `
+        <div class="item-main">
+          <div class="item-name">${item.name}</div>
+          <div class="item-fam">${item.fam || 'GENERAL'}</div>
+        </div>
+        <div class="item-price" title="Click para editar precio">${price.toFixed(2)} €</div>
+        <div class="counter">
+          <button class="cbtn btn-minus">-</button>
+          <span class="cnum">${qty}</span>
+          <button class="cbtn btn-plus">+</button>
+        </div>
+        <button class="del-btn" title="Eliminar">✕</button>
+      `;
+
+      // Eventos
+      el.querySelector('.btn-minus').addEventListener('click', () => updateQty(item.id, Math.max(0, qty - 1)));
+      el.querySelector('.btn-plus').addEventListener('click', () => updateQty(item.id, qty + 1));
+      el.querySelector('.del-btn').addEventListener('click', () => deleteItem(item.id));
+      
+      const priceEl = el.querySelector('.item-price');
+      priceEl.addEventListener('click', () => editPrice(item, priceEl));
+
+      list.appendChild(el);
+    });
+  }
+
+  function updateQty(id, newQty){
+    itemsCol.doc(id).update({ qty: newQty });
+  }
+
+  function deleteItem(id){
+    if(confirm('¿Seguro que deseas eliminar este producto?')){
+      itemsCol.doc(id).delete();
+    }
+  }
+
+  function editPrice(item, element){
+    const currentPrice = item.price || 0;
+    element.innerHTML = `<input type="number" step="0.01" value="${currentPrice}">`;
+    const input = element.querySelector('input');
+    input.focus();
+    
+    const save = () => {
+      const newPrice = parseFloat(input.value.replace(',', '.')) || 0;
+      itemsCol.doc(item.id).update({ price: newPrice });
+    };
+
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', (e) => { if(e.key === 'Enter') save(); });
+  }
+
+  function updateKPIs(){
+    const totalProds = itemsData.length;
+    const totalUnits = itemsData.reduce((acc, i) => acc + (i.qty || 0), 0);
+    const totalVal = itemsData.reduce((acc, i) => acc + ((i.qty || 0) * (i.price || 0)), 0);
+
+    document.getElementById('kProductos').textContent = totalProds;
+    document.getElementById('kUnidades').textContent = totalUnits;
+    document.getElementById('kValor').textContent = totalVal.toFixed(2) + ' €';
+    document.getElementById('footTotal').textContent = totalVal.toFixed(2) + ' €';
+  }
+
+  // Buscador
+  document.getElementById('search').addEventListener('input', (e)=>{
+    searchTerm = e.target.value;
+    renderItems();
+  });
+
+  // Modal Añadir
+  const overlay = document.getElementById('overlay');
+  document.getElementById('openAddBtn').addEventListener('click', () => overlay.classList.add('open'));
+  document.getElementById('cancelAdd').addEventListener('click', () => overlay.classList.remove('open'));
+
+  document.getElementById('confirmAdd').addEventListener('click', () => {
+    const name = document.getElementById('newName').value.trim();
+    const fam = document.getElementById('newFam').value.trim().toUpperCase() || 'GENERAL';
+    const price = parseFloat(document.getElementById('newPrice').value.replace(',', '.')) || 0;
+
+    if(!name){ alert('Ingresa un nombre de producto'); return; }
+
+    itemsCol.add({
+      name: name,
+      fam: fam,
+      price: price,
+      qty: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      document.getElementById('newName').value = '';
+      document.getElementById('newFam').value = '';
+      document.getElementById('newPrice').value = '';
+      overlay.classList.remove('open');
+    });
+  });
+
+  // Exportar Excel
+  document.getElementById('excelBtn').addEventListener('click', ()=>{
+    const data = itemsData.map(i => ({
+      Familia: i.fam || 'GENERAL',
+      Producto: i.name,
+      Precio: i.price || 0,
+      Unidades: i.qty || 0,
+      'Valor Total': ((i.qty || 0) * (i.price || 0)).toFixed(2)
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inventario");
+    XLSX.writeFile(wb, `Inventario_SonMoli_${new Date().toISOString().slice(0,10)}.xlsx`);
+  });
+
+  // Copiar al Portapapeles
+  document.getElementById('copyBtn').addEventListener('click', ()=>{
+    let text = "INVENTARIO F&B - SON MOLÍ\n\n";
+    itemsData.filter(i => (i.qty || 0) > 0).forEach(i => {
+      text += `${i.name} (${i.fam}): ${i.qty} ud. x ${i.price}€ = ${((i.qty||0)*(i.price||0)).toFixed(2)}€\n`;
+    });
+    navigator.clipboard.writeText(text).then(() => alert('Resumen de cantidades copiadas al portapapeles.'));
+  });
+</script>
+</body>
+</html>
