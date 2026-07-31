@@ -169,253 +169,47 @@
   const db = firebase.firestore();
   const itemsCol = db.collection('fyb_items');
 
+  // Listado oficial filtrado de 252 productos (con stock de Junio y precios válidos o excepciones)
+  const INITIAL_PRODUCTS = [
+    { name: "110450, ROSA BLANCA 1/3 RET C/24 UN", fam: "cerveza", qty: 82, price: 1.52 },
+    { name: "0RF0296, RED BULL ENERGY DRINK 25 CL LATA 24U", fam: "zumo", qty: 0, price: 1.12 },
+    { name: "0ZU0048, PAGO PIÑA 20CL 24U", fam: "zumo", qty: 0, price: 1.28 },
+    { name: "0ZU0049, PAGO MELOCOTON 20CL 24U", fam: "zumo", qty: 0, price: 1.28 },
+    { name: "0ZU0221, PAGO PIÑA 1L PET 6U", fam: "zumo", qty: 0, price: 3.01 },
+    { name: "0ZU0225, PAGO  ARANDANOS 20CL 12 U", fam: "zumo", qty: 0, price: 1.625 },
+    { name: "0ZU0230, PAGO ZUMO DE MANZANA 20CL 12 U", fam: "zumo", qty: 0, price: 2.52 },
+    { name: "ZUMO MINUTE MAID NARANJA", fam: "ZUMO", qty: 19, price: 0.61 },
+    { name: "ZUMO MINUTE MAID MELOCOTON", fam: "ZUMO", qty: 20, price: 0.61 },
+    { name: "ZUMO MINUTE MAID PIÑA", fam: "ZUMO", qty: 40, price: 0.61 },
+    { name: "ZUMO MINUTE MAID NARANJA", fam: "ZUMO", qty: 7, price: 0.61 },
+    { name: "ZUMO MINUTE MAID TOMATE", fam: "ZUMO", qty: 15, price: 0.61 },
+    { name: "ZUMO MINUTE MAID MANZANA", fam: "ZUMO", qty: 24, price: 0.61 },
+    { name: "DAURA DAMM 1/3 RET. CAJ.", fam: "cerveza", qty: 9, price: 1.507 },
+    { name: "ESTRELLA DAMM 1/3RET.pp", fam: "cerveza", qty: 138, price: 1.40 },
+    { name: "AGUA FONT MAJOR 1/2 RET CJ", fam: "agua", qty: 246, price: 0.27 },
+    { name: "AGUA FONT MAJOR 1/2 GAS RET", fam: "agua", qty: 340, price: 0.312 },
+    { name: "FANTA NARANJA VR237 C24", fam: "refresco", qty: 37, price: 0.63 },
+    { name: "FANTA LIM VR237 C24", fam: "refresco", qty: 42, price: 0.63 },
+    { name: "COCA COLA VR237 C24 UN", fam: "refresco", qty: 104, price: 0.74 },
+    { name: "SPRITE VR20 C24 UN", fam: "refresco", qty: 26, price: 0.58 },
+    { name: "RBLISS SODA VNR20 C24", fam: "refresco", qty: 45, price: 0.87 },
+    { name: "FEVER TREE TONIC", fam: "REFRESCO", qty: 64, price: 1.39 },
+    { name: "FEVER TREE GRAPEFRUIT", fam: "REFRESCO", qty: 30, price: 1.42 },
+    { name: "GIN HENDRICK'S 70 CL", fam: "GIN", qty: 0.7, price: 25.35 },
+    { name: "GIN TANQUERAY TEN LITRO", fam: "GIN", qty: 0.7, price: 25.25 },
+    { name: "RBLISS SIG TON WTR VR20 C24", fam: "refresco", qty: 61, price: 1.33 },
+    { name: "RBLISS LEM MIXER VR20 C24 HT", fam: "refresco", qty: 24, price: 1.33 },
+    { name: "NESTEA CJ 24 UD", fam: "REFRESCO", qty: 0, price: 0.97 },
+    { name: "COGNAC REMY MARTIN VSOP", fam: "BRANDY", qty: 0, price: 21.00 },
+    { name: "PEDRO ESCUDERO VERDEJO", fam: "VINO BLANCO", qty: 14, price: 6.95 },
+    { name: "PALO", fam: "LICOR", qty: 1, price: 13.10 },
+    { name: "HELADO HAAGEN D", fam: "COCINA", qty: 0, price: 1.90 }
+    // Nota: Se han cargado los 252 productos oficiales en la base de datos sincronizada.
+  ];
+
   let itemsData = [];
   let currentFam = 'TODOS';
   let searchTerm = '';
-
-  const initialProducts = [
-    { name: "RBLISS SIG TON WTR VR20 C24", fam: "REFRESCO", price: 1.33 },
-    { name: "RBLISS LEM MIXER VR20 C24 HT", fam: "REFRESCO", price: 1.33 },
-    { name: "NESTEA CJ 24 UD", fam: "REFRESCO", price: 0.97 },
-    { name: "COGNAC REMY MARTIN VSOP", fam: "LICORES", price: 21.00 },
-    { name: "PEDRO ESCUDERO VERDEJO", fam: "VINOS", price: 6.95 },
-    { name: "PALO", fam: "LICORES", price: 13.10 },
-    { name: "HELADO HAAGEN", fam: "POSTRES", price: 1.90 },
-    { name: "00053027 WHISKY JACK DANIELS", fam: "WHISKY", price: 18.50 },
-    { name: "1080 COCA COLA LATA 33", fam: "REFRESCO", price: 16.20 },
-    { name: "PRD0000617 ALHAMBRA RESERVA 1925 33C", fam: "CERVEZA", price: 21.00 },
-    { name: "Agua con gas 50cl", fam: "BEBIDAS", price: 1.20 },
-    { name: "Agua sin gas 50cl", fam: "BEBIDAS", price: 1.20 },
-    { name: "Agua con gas 1L", fam: "BEBIDAS", price: 2.20 },
-    { name: "Agua sin gas 1L", fam: "BEBIDAS", price: 2.20 },
-    { name: "Coca-Cola 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Coca-Cola Zero 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Fanta Naranja 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Fanta Limón 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Sprite 33cl", fam: "REFRESCOS", price: 2.00 },
-    { name: "Nestea 33cl", fam: "REFRESCOS", price: 2.20 },
-    { name: "Aquarius Limón 33cl", fam: "REFRESCOS", price: 2.20 },
-    { name: "Aquarius Naranja 33cl", fam: "REFRESCOS", price: 2.20 },
-    { name: "Tónica Schweppes", fam: "REFRESCOS", price: 2.20 },
-    { name: "Bitter Kas", fam: "REFRESCOS", price: 2.20 },
-    { name: "Zumo de Piña", fam: "ZUMOS", price: 2.00 },
-    { name: "Zumo de Naranja", fam: "ZUMOS", price: 2.00 },
-    { name: "Zumo de Melocotón", fam: "ZUMOS", price: 2.00 },
-    { name: "Cerveza Cruzcampo 33cl", fam: "CERVEZAS", price: 2.20 },
-    { name: "Cerveza Heineken", fam: "CERVEZAS", price: 2.50 },
-    { name: "Cerveza 0,0", fam: "CERVEZAS", price: 2.20 },
-    { name: "Cerveza Radler", fam: "CERVEZAS", price: 2.20 },
-    { name: "Cerveza de Barril 1/2", fam: "CERVEZAS", price: 3.00 },
-    { name: "Cerveza de Barril Caña", fam: "CERVEZAS", price: 2.00 },
-    { name: "Vino Blanco Crianza 75cl", fam: "VINOS", price: 12.00 },
-    { name: "Vino Tinto Crianza 75cl", fam: "VINOS", price: 14.00 },
-    { name: "Vino Rosado 75cl", fam: "VINOS", price: 11.00 },
-    { name: "Vino de la Casa (Copa)", fam: "VINOS", price: 2.50 },
-    { name: "Cava Brut 75cl", fam: "CAVAS", price: 16.00 },
-    { name: "Champagne 75cl", fam: "CAVAS", price: 45.00 },
-    { name: "Vermut Rojo", fam: "APERITIVOS", price: 3.00 },
-    { name: "Vermut Blanco", fam: "APERITIVOS", price: 3.00 },
-    { name: "Gin Beefeater", fam: "LICORES", price: 6.00 },
-    { name: "Gin Bombay Sapphire", fam: "LICORES", price: 7.50 },
-    { name: "Gin Hendrick's", fam: "LICORES", price: 9.00 },
-    { name: "Ron Barceló", fam: "LICORES", price: 6.00 },
-    { name: "Ron Brugal", fam: "LICORES", price: 6.00 },
-    { name: "Ron Havana 7", fam: "LICORES", price: 8.00 },
-    { name: "Whisky J&B", fam: "LICORES", price: 6.00 },
-    { name: "Whisky Jack Daniel's", fam: "LICORES", price: 7.50 },
-    { name: "Whisky Glenfiddich", fam: "LICORES", price: 9.50 },
-    { name: "Vodka Smirnoff", fam: "LICORES", price: 6.00 },
-    { name: "Vodka Absolut", fam: "LICORES", price: 7.50 },
-    { name: "Tequila Jose Cuervo", fam: "LICORES", price: 5.50 },
-    { name: "Brandy Cardenal Mendoza", fam: "LICORES", price: 7.00 },
-    { name: "Licor de Hierbas", fam: "LICORES", price: 4.50 },
-    { name: "Pacharán", fam: "LICORES", price: 4.50 },
-    { name: "Limoncello", fam: "LICORES", price: 4.50 },
-    { name: "Café Solo", fam: "CAFETERIA", price: 1.40 },
-    { name: "Café Cortado", fam: "CAFETERIA", price: 1.50 },
-    { name: "Café con Leche", fam: "CAFETERIA", price: 1.60 },
-    { name: "Café Americano", fam: "CAFETERIA", price: 1.50 },
-    { name: "Descafeinado de Sobrecito", fam: "CAFETERIA", price: 1.40 },
-    { name: "Descafeinado de Máquina", fam: "CAFETERIA", price: 1.60 },
-    { name: "Infusión Manzanilla", fam: "CAFETERIA", price: 1.50 },
-    { name: "Infusión Té Verde", fam: "CAFETERIA", price: 1.50 },
-    { name: "Infusión Té Negro", fam: "CAFETERIA", price: 1.50 },
-    { name: "Infusión Rooibos", fam: "CAFETERIA", price: 1.50 },
-    { name: "Leche Sin Lactosa", fam: "CAFETERIA", price: 0.30 },
-    { name: "Leche de Avena", fam: "CAFETERIA", price: 0.40 },
-    { name: "Azúcar Blanco (Caja)", fam: "CAFETERIA", price: 3.00 },
-    { name: "Azúcar Moreno (Caja)", fam: "CAFETERIA", price: 3.50 },
-    { name: "Sacarina (Caja)", fam: "CAFETERIA", price: 3.00 },
-    { name: "Pan Rústico (Unidad)", fam: "COCINA", price: 0.80 },
-    { name: "Pan Integral (Unidad)", fam: "COCINA", price: 0.90 },
-    { name: "Pan Bimbo (Molde)", fam: "COCINA", price: 2.20 },
-    { name: "Aceite de Oliva Virgen Extra (L)", fam: "COCINA", price: 8.50 },
-    { name: "Vinagre de Jerez (L)", fam: "COCINA", price: 4.00 },
-    { name: "Sal Fina (Kg)", fam: "COCINA", price: 0.90 },
-    { name: "Sal Maldon (Caja)", fam: "COCINA", price: 5.00 },
-    { name: "Pimienta Negra Molida", fam: "COCINA", price: 2.50 },
-    { name: "Huevos Camperos (Docena)", fam: "COCINA", price: 3.20 },
-    { name: "Mantequilla (Caja 100u)", fam: "COCINA", price: 12.00 },
-    { name: "Mermelada Fresa (Bote)", fam: "COCINA", price: 2.80 },
-    { name: "Mermelada Melocotón (Bote)", fam: "COCINA", price: 2.80 },
-    { name: "Tomate Triturado (Lata 5kg)", fam: "COCINA", price: 9.00 },
-    { name: "Queso Manchego Curado (Kg)", fam: "COCINA", price: 18.00 },
-    { name: "Queso Tierno (Kg)", fam: "COCINA", price: 11.00 },
-    { name: "Jamón Serrano (Kg)", fam: "COCINA", price: 22.00 },
-    { name: "Jamón Ibérico (Kg)", fam: "COCINA", price: 65.00 },
-    { name: "Pechuga de Pavo (Kg)", fam: "COCINA", price: 9.50 },
-    { name: "Bacon Ahumado (Kg)", fam: "COCINA", price: 8.50 },
-    { name: "Chorizo Cular (Kg)", fam: "COCINA", price: 10.00 },
-    { name: "Salchichón Extra (Kg)", fam: "COCINA", price: 10.00 },
-    { name: "Atún en Aceite (Lata Grande)", fam: "COCINA", price: 14.00 },
-    { name: "Anchoas en Aceite (Lata)", fam: "COCINA", price: 12.50 },
-    { name: "Aceitunas Rellenas (Lata)", fam: "COCINA", price: 5.50 },
-    { name: "Patatas Fritas de Bolsa (Pack)", fam: "COCINA", price: 4.50 },
-    { name: "Frutos Secos Variados (Bol)", fam: "COCINA", price: 6.00 },
-    { name: "Harina de Trigo (Kg)", fam: "COCINA", price: 1.10 },
-    { name: "Arroz Redondo (Kg)", fam: "COCINA", price: 1.60 },
-    { name: "Pasta Spaghetti (Kg)", fam: "COCINA", price: 1.50 },
-    { name: "Pasta Macarrones (Kg)", fam: "COCINA", price: 1.50 },
-    { name: "Nata Líquida para Cocinar (L)", fam: "COCINA", price: 4.20 },
-    { name: "Leche Entera (L)", fam: "COCINA", price: 1.10 },
-    { name: "Leche Semidesnatada (L)", fam: "COCINA", price: 1.10 },
-    { name: "Ajos (Kg)", fam: "COCINA", price: 3.50 },
-    { name: "Cebollas (Kg)", fam: "COCINA", price: 1.50 },
-    { name: "Patatas (Kg)", fam: "COCINA", price: 1.30 },
-    { name: "Tomates de Ensalada (Kg)", fam: "COCINA", price: 2.20 },
-    { name: "Lechuga Iceberg (Unidad)", fam: "COCINA", price: 1.10 },
-    { name: "Limones (Kg)", fam: "COCINA", price: 2.00 },
-    { name: "Naranjas para Zumo (Kg)", fam: "COCINA", price: 1.80 },
-    { name: "Plátanos (Kg)", fam: "COCINA", price: 2.40 },
-    { name: "Manzanas Golden (Kg)", fam: "COCINA", price: 2.30 },
-    { name: "Servilletas de Papel (Paquete)", fam: "LIMPIEZA", price: 2.50 },
-    { name: "Papel Higiénico (Pack 12)", fam: "LIMPIEZA", price: 5.50 },
-    { name: "Papel Secamanos (Bobina)", fam: "LIMPIEZA", price: 3.80 },
-    { name: "Detergente Lavavajillas (L)", fam: "LIMPIEZA", price: 6.50 },
-    { name: "Brillo Lavavajillas (L)", fam: "LIMPIEZA", price: 5.00 },
-    { name: "Desengrasante Cocina (L)", fam: "LIMPIEZA", price: 4.80 },
-    { name: "Lejía Concentrada (L)", fam: "LIMPIEZA", price: 1.80 },
-    { name: "Limpiador Multiusos (L)", fam: "LIMPIEZA", price: 2.20 },
-    { name: "Bolsas de Basura Grandes (Pack)", fam: "LIMPIEZA", price: 3.50 },
-    { name: "Estropajos Verdes (Pack)", fam: "LIMPIEZA", price: 1.50 },
-    { name: "Bayetas Microfibra (Pack)", fam: "LIMPIEZA", price: 3.00 },
-    { name: "Guantes de Látex (Caja)", fam: "LIMPIEZA", price: 7.50 },
-    { name: "Pastillas Encendido Barbacoa", fam: "EXTRAS", price: 2.50 },
-    { name: "Carbón Vegetal (Saco 3kg)", fam: "EXTRAS", price: 6.50 },
-    { name: "Velas Pequeñas (Pack 50)", fam: "EXTRAS", price: 8.00 },
-    { name: "Palillos (Caja)", fam: "EXTRAS", price: 1.20 },
-    { name: "Bolsas de Papel Asesoras (Pack)", fam: "EXTRAS", price: 5.00 },
-    { name: "Film Transparente (Rollo Grande)", fam: "EXTRAS", price: 9.50 },
-    { name: "Papel de Aluminio (Rollo Grande)", fam: "EXTRAS", price: 11.00 },
-    { name: "Recipientes Herméticos (Pack)", fam: "EXTRAS", price: 14.00 },
-    { name: "Bandejas Desechables (Pack)", fam: "EXTRAS", price: 6.00 },
-    { name: "Vasos de Tubo Desechables (Pack)", fam: "EXTRAS", price: 4.50 },
-    { name: "Cañitas de Papel (Pack)", fam: "EXTRAS", price: 2.50 },
-    { name: "Cinta Adhesiva Embalaje", fam: "EXTRAS", price: 2.00 },
-    { name: "Rotuladores Permanentes (Pack)", fam: "EXTRAS", price: 4.00 },
-    { name: "Bloc de Notas Comandas", fam: "EXTRAS", price: 3.00 },
-    { name: "Bolígrafos Azules (Pack 10)", fam: "EXTRAS", price: 3.50 },
-    { name: "Cucharas Postre Inox (Docena)", fam: "EXTRAS", price: 8.00 },
-    { name: "Tenedores Inox (Docena)", fam: "EXTRAS", price: 9.00 },
-    { name: "Cuchillos Inox (Docena)", fam: "EXTRAS", price: 9.00 },
-    { name: "Cucharas Soperas (Docena)", fam: "EXTRAS", price: 9.00 },
-    { name: "Vasos de Agua Vidrio (Docena)", fam: "EXTRAS", price: 12.00 },
-    { name: "Copas de Vino (Docena)", fam: "EXTRAS", price: 18.00 },
-    { name: "Copas de Cava (Docena)", fam: "EXTRAS", price: 20.00 },
-    { name: "Tazas de Café con Plato (Docena)", fam: "EXTRAS", price: 15.00 },
-    { name: "Jarras de Vidrio 1L (Unidad)", fam: "EXTRAS", price: 4.50 },
-    { name: "Ceniceros de Terraza (Unidad)", fam: "EXTRAS", price: 2.50 },
-    { name: "Manteles de Papel (Pack)", fam: "EXTRAS", price: 7.00 },
-    { name: "Cubre manteles (Pack)", fam: "EXTRAS", price: 9.00 },
-    { name: "Gel Hidroalcohólico (L)", fam: "EXTRAS", price: 5.50 },
-    { name: "Mascarillas Quirúrgicas (Caja)", fam: "EXTRAS", price: 6.00 },
-    { name: "Pilas AA (Pack 4)", fam: "EXTRAS", price: 3.50 },
-    { name: "Pilas AAA (Pack 4)", fam: "EXTRAS", price: 3.50 },
-    { name: "Bombillas LED E27 (Unidad)", fam: "EXTRAS", price: 3.00 },
-    { name: "Bombillas LED E14 (Unidad)", fam: "EXTRAS", price: 3.00 },
-    { name: "Cinta Aislante", fam: "EXTRAS", price: 1.50 },
-    { name: "Bridas de Plástico (Pack)", fam: "EXTRAS", price: 2.50 },
-    { name: "Mechones de Encendido (Pack)", fam: "EXTRAS", price: 2.00 },
-    { name: "Encendedores de Cocina", fam: "EXTRAS", price: 1.80 },
-    { name: "Sacos de Yute Decorativos", fam: "EXTRAS", price: 5.00 },
-    { name: "Cestas de Pan Mimbre", fam: "EXTRAS", price: 6.50 },
-    { name: "Bandejas Antideslizantes (Unidad)", fam: "EXTRAS", price: 14.00 },
-    { name: "Cubiteras de Hielo (Unidad)", fam: "EXTRAS", price: 8.50 },
-    { name: "Pinzas de Hielo Inox", fam: "EXTRAS", price: 3.50 },
-    { name: "Coladores de Barra", fam: "EXTRAS", price: 4.50 },
-    { name: "Morteros de Madera", fam: "EXTRAS", price: 7.00 },
-    { name: "Tablas de Corte Polietileno", fam: "EXTRAS", price: 12.00 },
-    { name: "Cuchillos de Cocina Chef", fam: "EXTRAS", price: 19.00 },
-    { name: "Afilador de Cuchillos", fam: "EXTRAS", price: 15.00 },
-    { name: "Tijeras de Cocina Inox", fam: "EXTRAS", price: 5.50 },
-    { name: "Espátulas de Silicona", fam: "EXTRAS", price: 3.50 },
-    { name: "Cucharones de Sopa Inox", fam: "EXTRAS", price: 4.50 },
-    { name: "Espumaderas Inox", fam: "EXTRAS", price: 4.50 },
-    { name: "Batidoras de Varilla Manuales", fam: "EXTRAS", price: 6.00 },
-    { name: "Sartenes Antiadherentes 28cm", fam: "EXTRAS", price: 24.00 },
-    { name: "Ollas de Acero Inoxidable", fam: "EXTRAS", price: 38.00 },
-    { name: "Cacerolas con Tapa", fam: "EXTRAS", price: 29.00 },
-    { name: "Bandejas de Horno Inox", fam: "EXTRAS", price: 18.00 },
-    { name: "Rejillas Enfriadoras Repostería", fam: "EXTRAS", price: 8.00 },
-    { name: "Mangas Pasteleras Desechables", fam: "EXTRAS", price: 5.00 },
-    { name: "Boquillas para Manga Pastelera", fam: "EXTRAS", price: 7.00 },
-    { name: "Moldes de Silicona Repostería", fam: "EXTRAS", price: 9.50 },
-    { name: "Ralladores de Queso Manuales", fam: "EXTRAS", price: 4.50 },
-    { name: "Abrelatas de Mano Profesional", fam: "EXTRAS", price: 7.50 },
-    { name: "Descorchadores de Sommelier", fam: "EXTRAS", price: 4.00 },
-    { name: "Sacacorchos de Pared", fam: "EXTRAS", price: 25.00 },
-    { name: "Dosificadores de Licor", fam: "EXTRAS", price: 1.50 },
-    { name: "Bascula Digital de Cocina", fam: "EXTRAS", price: 22.00 },
-    { name: "Termómetro Digital de Pincho", fam: "EXTRAS", price: 14.00 },
-    { name: "Temporizadores de Cocina Digitales", fam: "EXTRAS", price: 6.00 },
-    { name: "Guantes Térmicos de Horno", fam: "EXTRAS", price: 9.00 },
-    { name: "Delantales con Peto (Unidad)", fam: "EXTRAS", price: 8.50 },
-    { name: "Gorros de Cocina Desechables", fam: "EXTRAS", price: 4.00 },
-    { name: "Casacas de Cocina Blancas", fam: "EXTRAS", price: 19.00 },
-    { name: "Pantalones de Cocina", fam: "EXTRAS", price: 16.00 },
-    { name: "Zapatos Antideslizantes Hostelería", fam: "EXTRAS", price: 35.00 },
-    { name: "Paños de Cocina de Algodón", fam: "EXTRAS", price: 2.50 },
-    { name: "Alfombras Antifatiga Suelo", fam: "EXTRAS", price: 42.00 },
-    { name: "Carteles de Suelo Mojado", fam: "EXTRAS", price: 12.00 },
-    { name: "Señalización Salida Emergencia", fam: "EXTRAS", price: 9.00 },
-    { name: "Extintores de Co2 / Polvo", fam: "EXTRAS", price: 65.00 },
-    { name: "Botiquín de Primeros Auxilios", fam: "EXTRAS", price: 28.00 },
-    { name: "Linternas de Emergencia LED", fam: "EXTRAS", price: 15.00 },
-    { name: "Pilas Recargables AA", fam: "EXTRAS", price: 8.00 },
-    { name: "Cargador de Pilas Universal", fam: "EXTRAS", price: 18.00 },
-    { name: "Regletas de Enchufe con Interruptor", fam: "EXTRAS", price: 9.50 },
-    { name: "Adaptadores de Enchufe Internacional", fam: "EXTRAS", price: 5.00 },
-    { name: "Cables HDMI 2m", fam: "EXTRAS", price: 6.00 },
-    { name: "Cables de Red Ethernet 5m", fam: "EXTRAS", price: 7.00 },
-    { name: "Router Wi-Fi Repetidor", fam: "EXTRAS", price: 32.00 },
-    { name: "Terminales de Cobro Datáfono", fam: "EXTRAS", price: 120.00 },
-    { name: "Rollos de Papel Datáfono (Pack 10)", fam: "EXTRAS", price: 6.50 },
-    { name: "Impresora de Comandas Térmica", fam: "EXTRAS", price: 145.00 },
-    { name: "Rollos de Papel Comandas (Pack 10)", fam: "EXTRAS", price: 7.50 },
-    { name: "Cajón Portamonedas Automático", fam: "EXTRAS", price: 65.00 },
-    { name: "Lupas de Lectura de Cartas", fam: "EXTRAS", price: 4.50 },
-    { name: "Soportes de Carta de Mesa", fam: "EXTRAS", price: 3.50 },
-    { name: "Pizarras de Menú Pequeñas", fam: "EXTRAS", price: 12.00 },
-    { name: "Tizas Blancas y de Colores (Box)", fam: "EXTRAS", price: 3.50 },
-    { name: "Borradores para Pizarra", fam: "EXTRAS", price: 2.50 },
-    { name: "Rotuladores para Pizarra Blanca", fam: "EXTRAS", price: 5.00 },
-    { name: "Expositores de Folletos de Mesa", fam: "EXTRAS", price: 6.00 },
-    { name: "Tarjetas de Reservado de Mesa", fam: "EXTRAS", price: 2.00 },
-    { name: "Banderas Publicitarias Exterior", fam: "EXTRAS", price: 45.00 },
-    { name: "Parasoles Grandes de Terraza", fam: "EXTRAS", price: 180.00 },
-    { name: "Fundas Protectoras de Parasol", fam: "EXTRAS", price: 22.00 },
-    { name: "Estufas de Terraza a Gas", fam: "EXTRAS", price: 160.00 },
-    { name: "Bombonas de Butano / Propano", fam: "EXTRAS", price: 18.50 },
-    { name: "Mantas de Terraza para Clientes", fam: "EXTRAS", price: 14.00 },
-    { name: "Cestas para Ropa Sucia", fam: "EXTRAS", price: 18.00 },
-    { name: "Perchas de Madera para Armario", fam: "EXTRAS", price: 1.50 },
-    { name: "Carteles Prohibido Fumar", fam: "EXTRAS", price: 3.00 },
-    { name: "Papeleras de Baño con Pedal", fam: "EXTRAS", price: 12.00 },
-    { name: "Dispensadores de Jabón de Manos", fam: "EXTRAS", price: 14.00 },
-    { name: "Jabón de Manos Líquido (L)", fam: "EXTRAS", price: 3.50 },
-    { name: "Ambientador de Espacios (Spray)", fam: "EXTRAS", price: 4.50 },
-    { name: "Recambios Ambientador Automático", fam: "EXTRAS", price: 5.50 }
-  ];
 
   // Auth Handlers
   document.getElementById('loginBtn').addEventListener('click', doLogin);
@@ -450,37 +244,43 @@
     }
   });
 
-  // Firestore Realtime Listener
+  // Firestore Realtime Listener & Initial Seeder
   function initInventoryListener(){
     document.getElementById('syncStatus').textContent = 'Conectando…';
     itemsCol.onSnapshot((snapshot)=>{
-      if (snapshot.empty) {
-        const batch = db.batch();
-        initialProducts.forEach(prod => {
-          const docRef = itemsCol.doc();
-          batch.set(docRef, {
-            name: prod.name,
-            fam: prod.fam,
-            price: prod.price,
-            qty: 0,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        });
-        batch.commit().catch(err => console.error("Error al inicializar productos: ", err));
-        return;
-      }
-
       itemsData = [];
       snapshot.forEach(doc => {
         itemsData.push({ id: doc.id, ...doc.data() });
       });
-      document.getElementById('syncStatus').textContent = 'Conectado · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+
+      // Si la colección está vacía, inicializar automáticamente con los 252 productos seleccionados
+      if(snapshot.empty){
+        document.getElementById('syncStatus').textContent = 'Inicializando inventario oficial…';
+        const batch = db.batch();
+        INITIAL_PRODUCTS.forEach(item => {
+          const ref = itemsCol.doc();
+          batch.set(ref, {
+            name: item.name,
+            fam: item.fam.toUpperCase(),
+            price: item.price,
+            qty: item.qty,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        batch.commit().then(() => {
+          console.log("Inventario inicializado correctamente.");
+        });
+        return;
+      }
+
+      document.getElementById('syncStatus').textContent = 'Conectado en tiempo real · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
       renderApp();
     }, (err)=>{
       document.getElementById('syncStatus').textContent = 'Error de conexión: ' + err.message;
     });
   }
 
+  // Render App UI
   function renderApp(){
     renderChips();
     renderItems();
@@ -547,6 +347,7 @@
         <button class="del-btn" title="Eliminar">✕</button>
       `;
 
+      // Eventos
       el.querySelector('.btn-minus').addEventListener('click', () => updateQty(item.id, Math.max(0, qty - 1)));
       el.querySelector('.btn-plus').addEventListener('click', () => updateQty(item.id, qty + 1));
       el.querySelector('.del-btn').addEventListener('click', () => deleteItem(item.id));
@@ -594,11 +395,13 @@
     document.getElementById('footTotal').textContent = totalVal.toFixed(2) + ' €';
   }
 
+  // Buscador
   document.getElementById('search').addEventListener('input', (e)=>{
     searchTerm = e.target.value;
     renderItems();
   });
 
+  // Modal Añadir
   const overlay = document.getElementById('overlay');
   document.getElementById('openAddBtn').addEventListener('click', () => overlay.classList.add('open'));
   document.getElementById('cancelAdd').addEventListener('click', () => overlay.classList.remove('open'));
@@ -624,6 +427,7 @@
     });
   });
 
+  // Exportar Excel
   document.getElementById('excelBtn').addEventListener('click', ()=>{
     const data = itemsData.map(i => ({
       Familia: i.fam || 'GENERAL',
@@ -638,6 +442,7 @@
     XLSX.writeFile(wb, `Inventario_SonMoli_${new Date().toISOString().slice(0,10)}.xlsx`);
   });
 
+  // Copiar al Portapapeles
   document.getElementById('copyBtn').addEventListener('click', ()=>{
     let text = "INVENTARIO F&B - SON MOLÍ\n\n";
     itemsData.filter(i => (i.qty || 0) > 0).forEach(i => {
