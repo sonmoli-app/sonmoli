@@ -134,6 +134,7 @@
   <div class="footer-actions">
     <button class="fbtn" id="copyBtn">Copiar</button>
     <button class="fbtn" id="excelBtn">Excel</button>
+    <button class="fbtn" id="resetBtn" style="border-color:rgba(156,69,48,0.6); color:#e8b4a8;">Reiniciar recuento</button>
   </div>
 </footer>
 </div>
@@ -377,6 +378,21 @@
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
     XLSX.writeFile(wb, `inventario-son-moli-${new Date().toISOString().slice(0,10)}.xlsx`);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', async ()=>{
+    if(!confirm('¿Seguro que quieres poner todas las cantidades a 0? Los productos y precios no se tocan, solo el recuento.')) return;
+    if(!confirm('Confirma otra vez: esto reinicia el recuento de los ' + items.length + ' productos. ¿Continuar?')) return;
+    document.getElementById('syncStatus').textContent = 'Reiniciando recuento…';
+    for(let i=0; i<items.length; i+=400){
+      const chunk = items.slice(i, i+400);
+      const batch = db.batch();
+      chunk.forEach(item=>{
+        batch.update(itemsCol.doc(item.id), { qty: 0 });
+      });
+      await batch.commit();
+    }
+    document.getElementById('syncStatus').textContent = 'Recuento reiniciado · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
   });
 </script>
 
