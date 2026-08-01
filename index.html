@@ -402,9 +402,34 @@
   });
 
   document.getElementById('excelBtn').addEventListener('click', ()=>{
-    const rows = [['Producto','Familia','Cantidad','Precio','Subtotal']];
-    items.forEach(i=>{ const qty=i.qty||0; rows.push([i.name, i.fam, qty, i.price, +(i.price*qty).toFixed(2)]); });
+    const rows = [['Producto','Cantidad','Precio','Subtotal']];
+    const fams = [...new Set(items.map(i=>i.fam))].sort((a,b)=>a.localeCompare(b));
+
+    let grandQty = 0, grandValue = 0;
+
+    fams.forEach(fam=>{
+      const famItems = items.filter(i=>i.fam===fam).sort((a,b)=>a.name.localeCompare(b.name));
+      rows.push([`— ${fam} —`, '', '', '']);
+      let famQty = 0, famValue = 0;
+      famItems.forEach(i=>{
+        const qty = i.qty || 0;
+        const subtotal = +(i.price*qty).toFixed(2);
+        rows.push([i.name, qty, i.price, subtotal]);
+        famQty += qty;
+        famValue += subtotal;
+      });
+      famQty = Math.round(famQty*10)/10;
+      famValue = +famValue.toFixed(2);
+      rows.push([`Total ${fam}`, famQty, '', famValue]);
+      rows.push(['', '', '', '']);
+      grandQty += famQty;
+      grandValue += famValue;
+    });
+
+    rows.push(['TOTAL GENERAL', Math.round(grandQty*10)/10, '', +grandValue.toFixed(2)]);
+
     const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:45},{wch:12},{wch:10},{wch:12}];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
     XLSX.writeFile(wb, `inventario-son-moli-${new Date().toISOString().slice(0,10)}.xlsx`);
