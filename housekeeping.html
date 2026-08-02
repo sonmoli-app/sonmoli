@@ -72,10 +72,10 @@
     display:inline-block; padding:0.15rem 0.4rem; border-radius:3px;
     font-family:'IBM Plex Mono',monospace; font-size:0.55rem; font-weight:500;
   }
-  .checkout-today{background:#d9731c; color:#fff;}
-  .checkout-future{background:#d9731c; color:#fff;}
-  .checkin-badge{background:#d4ac0d; color:#2b2a22;}
-  .turnover-badge{background:linear-gradient(90deg, #d9731c 50%, #d4ac0d 50%); color:#fff;}
+  .checkout-today{background:#e0a374; color:#3a2a1a;}
+  .checkout-future{background:#e0a374; color:#3a2a1a;}
+  .checkin-badge{background:#e3cf8a; color:#3a3320;}
+  .turnover-badge{background:linear-gradient(90deg, #e0a374 50%, #e3cf8a 50%); color:#3a2a1a;}
   .assigned-badge{
     display:inline-block; padding:0.15rem 0.4rem; border-radius:3px;
     font-family:'IBM Plex Mono',monospace; font-size:0.55rem; font-weight:500;
@@ -203,6 +203,9 @@
       <div class="toggle-row">
         <label class="toggle" id="petToggle"><input type="checkbox" id="petCheck">🐕 Perro</label>
         <label class="toggle" id="bedToggle"><input type="checkbox" id="bedCheck">🛏️ Cama extra</label>
+        <label class="toggle" id="sofaBedToggle"><input type="checkbox" id="sofaBedCheck">🛋️ Sofá cama</label>
+        <label class="toggle" id="twinBedsToggle"><input type="checkbox" id="twinBedsCheck">🛏️🛏️ Dos camas</label>
+        <label class="toggle" id="cribToggle"><input type="checkbox" id="cribCheck">👶 Cuna de bebé</label>
         <label class="toggle" id="minibarToggle"><input type="checkbox" id="minibarCheck">🧊 Reponer nevera</label>
       </div>
     </div>
@@ -248,7 +251,7 @@
   const SUPERVISOR = 'ines';
 
   function defaultRoom(){
-    return { status:'sucia', cleanedBy:'', notes:'', checkoutUntil:'', checkinDate:'', pet:false, extraBed:false, minibarPending:false, assignedTo:'' };
+    return { status:'sucia', cleanedBy:'', notes:'', checkoutUntil:'', checkinDate:'', pet:false, extraBed:false, sofaBed:false, twinBeds:false, babyCrib:false, minibarPending:false, assignedTo:'' };
   }
   function statusLabel(s){
     return {limpia:'Limpia', sucia:'Pendiente', proceso:'En proceso', inspeccion:'Inspección'}[s] || s;
@@ -344,6 +347,9 @@
       let icons = '';
       if(r.pet) icons += '🐕';
       if(r.extraBed) icons += '🛏️';
+      if(r.sofaBed) icons += '🛋️';
+      if(r.twinBeds) icons += '🛏️🛏️';
+      if(r.babyCrib) icons += '👶';
       if(r.minibarPending) icons += '🧊';
       const todayStr = new Date().toISOString().slice(0,10);
       const isSameDayTurnover = r.checkoutUntil && r.checkinDate && r.checkoutUntil === r.checkinDate;
@@ -426,6 +432,9 @@
     document.getElementById('notes').value = currentRoom.notes || '';
     document.getElementById('petCheck').checked = !!currentRoom.pet;
     document.getElementById('bedCheck').checked = !!currentRoom.extraBed;
+    document.getElementById('sofaBedCheck').checked = !!currentRoom.sofaBed;
+    document.getElementById('twinBedsCheck').checked = !!currentRoom.twinBeds;
+    document.getElementById('cribCheck').checked = !!currentRoom.babyCrib;
     document.getElementById('minibarCheck').checked = !!currentRoom.minibarPending;
     document.getElementById('overlay').classList.add('open');
   }
@@ -448,6 +457,9 @@
       checkinDate: document.getElementById('checkinDate').value,
       pet: document.getElementById('petCheck').checked,
       extraBed: document.getElementById('bedCheck').checked,
+      sofaBed: document.getElementById('sofaBedCheck').checked,
+      twinBeds: document.getElementById('twinBedsCheck').checked,
+      babyCrib: document.getElementById('cribCheck').checked,
       minibarPending: document.getElementById('minibarCheck').checked,
       assignedTo: assignedTo
     };
